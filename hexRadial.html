@@ -1,0 +1,410 @@
+<body>
+  <img id="tiles" src="hexSheet2.png" />
+  <img id="europe" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAMAUExURTg4ajN5FS9vPCx3Ji14NjZtLztsOjd3Kzp4Oj5YUT5Wcy95RjtrRTxoVTx3Qjt2V0JsO0R5KkJ3OlVsJ1N4Jlh3OGB1HWR0PENbUUlKekNqR0dpV0N4RUd2V1ZiTFBuXVJ6SlR4WUtoZU5icUt2Y09xfFRoZ1ZpdlR4aFp4dmR2WWJuZWJqfmF6bGR5eXB+fVZWiFtnjltkqWNck2VdpGVmi2ZnmGd6hmx1mHBjjnJrmXV4jnN4mmppom5qsG1yo290uXJrpndts3Z3qHt6snxzxzaJHi2AJy2FNiuWNzeIKzqFOjeVLTqVOS6lOTmkKjukOi6aRTyEQT2KVDyXQjylQVODHkaIKUKHOUeWLEWXOFaIKVSIOlaYKlaZNkynLEalOk6xPVWnLVenOlWyOWSJK2iJNGiYKmaZN3WGOXWXKXaaN2alLWanOWayOXemKHaoN3iyOkOHREmEVUWWREebUFWHR1SFWFebRVeVVU2BZFiFaVmEdleQaFmSeUelQ1anRVmmVFmyRWaCRWSIWmaYSGaVV3KIRXaXRXaZVWWJZ2WEeGeVZmWTeHCMa3aMeHWVZnWVeGepRGSjVWiyR2W1U3ioRXmnVnm1Rni3VnOqZnTCTluIgmmGh2yHk2iSh26QmHOHinaImHSXhnmTmW+AoXqGpn2EtXyUpnyQs36kj32soH2Gx3yWwpF8OZd4TKN5TYR5q4R7toZ+wpF+womFNYmZK4WbNpSKOZeaOImlKoenOIazOpmkJpWqOZW7LZi0O6aUN6emLaepOqizObWoPLS2OpGRSJCQbIapRIepVIe1Roi4VpaoRpepVpa2Rpa2VZKuZ6yTTrCRZqipRaWnU6e0Rqm3VLapRbmlVbW0RLa0VbGtZozCVY7DYanBTMKqPsObV8KuUMasaYGHmoGZjoOXl4OIqoaGuISTp4iVtpOGqpGHuJeVrJKVuourko6jsoiGwoqUwoqS0ZGHw5CJ0paWx5qV0pqlyaCUwqOi0smsgwAAAAAAAAAAAAAAAIxbnYUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABs8SURBVGhDbXp/eFvXeR63JuRtBsMUFq8mcFGbGh8JSGsWLM0LTAHGMhdtHVxiYVGqAq9NGI+hRpwUyCCEiHTIFohs2oohzw0m05QdSCHG54LOvMcht1RWwLJUSImhKRoSBUEUJcWbogUXnGcLnsuq2z97v3NBRU7ykSBA4Nzznvf7fc5FjSi6VVFU1c1p/FHxkv65X6az1sOjXz9QuFYo5MPhhJyQg11ej9crc2ZtQEW1cL8itbXaQxOpBvNiGM3uVlX3r0FAlOTI8sqVwrWVuUiv7IV0ddFfL89AcG3JVGvgJIlNqMfs+KHfqvBRgNDEbkZHnFbxi+sqqlOhCZhUFMvhkf1n1taKM6mQLMveuDfm9dKceksaw0qlkt1o4Lg6g8FoNFmsdvxnAJCuVgcSkh8DoS4mLqLQfo+Hs8TokVRUe9OL7xcKa4VIwBOTJAkABGLg9DqjXRUdipqxm3mD0dScVsobqpqxDul5rtbA13OcLypFpXsgoqCKLozYklL1GVLKWAmkkI/0+KMA0YSpot6kaAMzTsfG229vvKVmK8pJS5NZR2rDgw2NAkQAC3Bod6sKFLVF4J6USpntT+WKs/v37YlFLXptevanjjNY76kVw+wWa/PEbYuR5zUEiI8tp0ZsF4QsmLST/Sv/lQ2/jwZkWjw5sFz88VhI4kzpJlwDA0D0UDvUVZUNu6meM/C80VhPHxuY5aNEHAti6rKBDI0sVT4tKZMZJ7tsS7Kqaj82tvwNWfoXloya1msoZBGTdZwRKanlnSetJm3tMAf+6I00xA8iRBogHe2iS90kV7xdKSVfGf6lCjSBIvinAnLUnFayagYuU5XGDKbXtGu37kga+Tq8qdfpSYABIpzk88HwUo0oiIKg8bDvVDIDPjMD+Yxpsie/9Tnfg/ap6YqqUODxPh/P8SYa9yHz+OZm2N4CDgYDIoYAjFAXs7qf0wyPH3VaVTLNtzN/HYsOlyc37ncuJjBTVv2UVn4SF8UkaJuz4O00U20pM4lVmWjyqhhIaX7ECCEyJpuCQEOdmeb0oZg0ZDabrPT/rwpU3+zIlnhaIQXj9pKaaSjTJxnLDnyoqYhm5zXXiJJvST4YXnAJNoGhKJnMcEyOx77dyWXo0l+R0kTGYoSlT+r8DIVLKqrDDpVVNh6p5ZvKEzo+yvOa9UnAg4WV3w8QknZKJ6KaGZbkODLgod8EkjHpaut/gTkt8H6PJNWmS6qC8K2oDnDQm0zktMwefJQwNBZ4g5gQjWo6UYbARK4zZ9T/xv7/jKTNtZwRBq5kDJJe0vMWTafwkB3QIEcxTnPDpUCAJS3oVBMCcdk091KVNFJmnX5Y+U0gdqzXROqxYzqTxaLFCKS0QyPAUQghWflo8WxyhgJKmrqY4aGwtPVbEhc7NPSb1EUg1kym2WQ1c/zk/VnBqocCCYTWr3kusCBbVBiIuKmNLpWtp7iY7JGgsF+TjKmWtzrtusb09noT/v+QhRIlu3QtpzeAHvIao8AezLOAQmg1QqsWi5PDw8nh8ayFxnj1GSSTz8QjJK2zWrdnLDtL6oaqID6qIAiWqj1gEApyDeV+ISYOImI183r9kNrMmwck2df0K0mSJF1vhrZ2klmQEPEoZ+wY1Wy1VFMNMWEehWTyGamxCR9tvq1OTljIWmZnOVO2RL1e/fAETfVLwYozxvpkeVwp3x53MgJJE29MlieHKIOQ6cnEEB8wtkCi2ls1m5ufVrLWRiQe5LcmZUp8O2PuxCWWX1NXBmncdHLCanp4HLHejPVLfoQHcaAMhQjHfFtlTZudiZ8aCSTAJMs1+kZaPmo6XWFStkDYc6lcThv1nM6EjF5vTFqNPFMO8ygsHd77a5b4pTAQpVErAjwmfkspPYIkzf2yHlWQADPW3242GTElpXOO05EVMDn7SxhMP1UUihfJsMWFnhiImhmiKsQdUtRsy18N8VxUj0w+wZIfRLGadCajTgdPrYJUGx5yW2J9HwsKmPtZMSiAIH+/1aLnDH6PhLYgLYFGHcfXP2qxaHmgNG6p5VhRxR8gcToedYNqBzK6nnkvmw+CFxrEvfeYiWrEEmpJxkxD9Q+85XYrf05tD4era3WmDbLHlx9rrDWik+L0VQKQWirBqIB4SZpmM/p9hihw8UGUajD5Ar0NQdGCtiy8n9ebLeOiWh6KQal6PdRiqLeS0csPG2sNteih9FDiZ0VPCoNEoRVasqYp+sBHFfKeEEg2g0B8oJnir7TTjEJABsLlTVRZSxadUWtrJSkmPUdZnITN7vOhTNKfqmD1WzhVd4NJ4BM1gphF9h0eniipn76tlhTlew82YYUAMZNDl+1DmpYA4aXO0UfTM0VQV0XhrQHcJ34ObgetsVEkSCvU/mpJBAlLVYb/+kE91msw1D+MxPGIsZ5MrY/GYnE02dWr/H5ZWyOJVmWrHkvPjIq2DjywkhphF1CgFsL4X5XKZNRDJdpoMZuay+MmnY76D1qZjC7b6w3KXklG7YwFXxukaX0EDE+h/LEFg7nJ9wCzlV7ARHPUqlh5PjlpV7IlYpXEYIhfise7UXBj3SicweCR16A3ySvH9+B6b7fGrppNqlJVFhEioQ6S5mPyttJsVxxZWFtLJuix9HpcHw92yV6ZrOLtDIZ6iM4THm/oTVDQNAgS+Fjy4dnXDVp+uDIxqRql5jM8IKxbI0dT0hbmJj4JOxIJ89KEsrcrmAgGvV2x3XHZm8B2JY4dC0OKgRR7qamN6aBqnxr3/SjVtnPabipPphHY1ZGYHhdD/6AS7Op6OtgVjEPwz/HUWDh1hKBoTDeByF6Gol0LwUtSF5u/KgykNGkymmkDACHKsEC318d9tatrdzwoB48cD/YEsXH0dsqByP6l0UAnwEKYvptw7nkdu5xsg5aoZatXYZJ9a/JkZnKyCQOxIBqDfgc0vE9Ig9jJ7cZ+sSeQOh4KBjs9MH4onL8ZDsgeOTwWBg2sR5a6NQwSDQSVUbTZbEKWxQhE2W42DzQ1me+NwSDSUkIaDIeOQ1ddu3cHexKp1zqxYp+UCIT2wO84T2j05ijB0mVVJkiA2gRSTUMDQGwdFPgEpCQ5D7aYzHdBhgwShZpjKU949HgoBAYgE+zs2ROQUU7wqcfb/TmspvMvchdTAfDVhD7BXy21+WoabIBpwBN6LzKIfast0ARDQUQKyvLPAJGKHACf45ETo/mbAQlTsKl8lLNS+/LFMXlrdlLAlsDwDSQ20KlBTwHvRXZPm7CTQdpF2Eb93u5ub2enHIzLPYnQhavXr65cPVMoXJ9dDm+5KrGWfHJ49lw+4GWzM5R7grRiAwCpDFCgoxmmup3C1WjNyTt7lpfDqcT7hdXLi6s/X7yxemv+dADqR74mjSBg5Vjsq4Hi+phf8ngoFUOQ8mh3qofONSbEhZRW08BAFHQLfuRhWik80+O9GQkvXbqxeOPy5dV3frj6o9XF0xEPszFbMgamwt6untzsjIzyy97T6XhK3nUGo87UXCMQFeLBGDXY3IQyrjU63m6p+8/glImx/RdvrK6uXr58+Z3Lq4srudETqQTzIVYY9ZwcyodluS8/A350Za0pnURX8PnP1+os6AVrvsCIaEwIrEaB/UsZowHVAnEtx+SYlIisrF5+59JLVy6/u7i4+NIXnxz7EzlG+04602AakUdlaXf8G3Phrz5BzYbOqip2kxnNx0laM/Mu9iAQesHsohCIN3jweG8oFPcGI4vAeEjue2lpuW/b542GUNgbI/cGAosFf6Dn9YAc6sstMbc1WMpYaBldqY66t0oNpsVGnpGgX1JeRf1UQYPii8nhmf3L4YS3b+nKT49uw7IN27YZOIuSHLkg/ylcF+0Acw+p7mdLV5byxZv5EYLkGssUDY7txjrOUs6UyjVCA5yXoPBbhQGXEtoXGD2wXPzbuZR/CV512M/VQQ9cra6spgdeeN3vRwul2YTznwiH/yLc2xsgd4PRt0MXhGKu22Pa8UizCcEB0xPAPQj8x9TFSd2BSLE415d6Hyb3eLn/OGioh01vf5hJN79+IkElWOsr/IHePbKv2+//U662to43pUnjolIafu65Jnt7xQEW5MU2UdAMQjhIL4oRK0QgBmYLI55UvnD58r7Ytwf7lwN+/QMbH6K/eXn02fzoiUEvlV69jNRL/s5ocDxrGESXICSTO4QOPJOiIC2Vf9z8v5tZtbJZEXbtmprKUEuEnV2of9kv7bkwu7h4cWT7lxuPvZEKcOjp1VLzQ+F8PjKTj4Tkb0qxOCME161Fv8YO9OjIRti500EbORcLRptamUZnUt7c/KcPpz7JulzqSTLJE34pEZLxqjfy3kuPmoSO6eboPwu9xmfeUj8sWaKjs3Ozcz+e6UVlllno40fa4+exK54SaXLBBdklCB01DbAJNqYbp4ZeOfbKUHL8FxOlu3dLj2wzGJCb4gm/0WLSHfYbHmhpAUhG55dDgwMt6qfYjh8+enrlavHMzeWeUODEU0xZSHV+s13taHeBhyC6vtLR0d7u2FXTrgqoKOpwNB47fum9n1269Hqq+5uDqcHEYEyG/5hLH6qZpiarrXXXvxE/pCZW7knx5UoWO61j3NHC2tXZ3FhPoG+prwfuJns9+lNKCzgIQnu7q0PsoCO7XTXwV5coKE2dwaf7z86fOTNfzIXePN538f0bN25cuvjUqcr0V1oa/nWD8HirWHYo39MlYj3Lo+OkduXk90Z+/HdXrpyOpEbzz0YuvHnitdfisQcVsQMgIiYVnIITL1y7qJAQM0s8+I0fF6Hk2fwSjBlaWvzRu+8uFo4OZ9myhBbhDyffyCglK9ftnznwMtucis7kyF8uLu4Lhy/O5pYPBLwez29xTeVsh5MOnoDixBOEDI84EcTxbaH3CrO53Exudn39aqizJ3TgdG71b/uaSmTBXS5Xm6N50TLVoSR9e5ZOf+cxuLE65RRKjduoX1mZPXDx6DYEpxQzKypmBwGn+NHm5t1NVVTdVRChefDmNyK5yLP9M3MLPzmX70ECRpUKH7Zu+Ulb2x8cdbpxtVUfWLo4MvDq+MbUlOi+/ejixfdH/ySfu3GtONr9hOSPnaxMd0w5RXHz40uQ75Y3xWmoq5VQHHVhklQkV1w/N59/BkXEkxjkku10TsU05lKs5a8ARrQO/M6B4/HaU9lpOrMeWFpZCfT0/eWBMythOfo5Thr6xcbmJ5uf3Bka+aCwcmD0b+wbG2BCicStcKFAz8GxpdzK9eLCenF5qdcTM1usLWQPTf7Pf0mnwURodaQfq/eEYoeGJ7OK+x/M+86sRC7t8e95amSbfw+ym8lkTdsdEwOp3OytM7lc5PVHkzUNXyDbCxt8KhV6dm5+vXgml5+HWWZO8Jl2oaMVrqKJY1geUttswuO2FmdSn+rvicVObUyrut7C7OgX6/x7BtLpJF/HZ8oTp/QGw9GV+fVrZ6+szEQiBy5pES/ezXDy2PGZuQ9mc5Fwbv7c2rmrI4+p/9a1S2yvcnFmDocGxF1CK3gLTuvvPntQ0pta1MxAuLAy+h1+6LkJ9Igtw8PfVyaH5HD/bAGVdPb00kouP3eG1IWKUmr2o0+T+/qe7A090188u1Y48KUy7CqWPrpbNX1mKHGsvQ32a2mxwT6joxbBasqIlpHT+cjrL5+0OztKauaQNGA0vv5kby53+nThv/99rvhBsXDjBnUrsL1ikQY9dFMkgOZqZrY4m3t+vNQhqnfSt22qBqKaYy+2dKCrBUyr0JJ8o3Ha0ayIvzg8uhKRXyg5hJKzlHwq1ONPRYpXr67k8ws/mfu7hfPnfr66ChBEiVgyP+GNxbzy8dDyWDgCc4V5xSVOK8Mmlkch7sxQT6OI2V2s/rSKhy/cdrW0i0LjyOl9nkf/Z8tHalaxDz3n7Xxz7vz5tcL6QrFQvLp2bu3sGkBY7+hAM9nNdgbhvQf7+yNLYX5C+fST9nZ21CoIbW0dtx+x7AQh1Albi62lzfUfIknR5nKLjsanlva9YVWnbrtL9iQnh5fnz51bWJ/9ycL5+fnzC6vXwAQe3FCTdfB1khf9clcwHNmf/2BmLHUsrZbELB3ju1z0eNyRaVHoTFRVEV7TbvfLBhud9oq2iYH3RqMD5YzTXVHSf8X19uXWbhXgoOfnC+vza2twgBp0dBChEZldDkIOhpdz5599Jtx4W3QKDvCwuVpYYYDBHermlOpytonTU6Lywjg8AgZtzZi/uG8kOpBU3KKS5GU51L+yBllfX1g4d+va6mUCIRcWshkUqe54PBRCCcqvRTrrxp274EosOba1MY21ZCsVtyr+4yeTdzb+98evvrwT9cgm2Kbs6ZcvffdYdFgplZwWfk/gzf4iCKzdWj+/sLb6c40JBPsGO++RsLlFKxs8niu85zOXO8glmAAN0tpRybor09O3Gw+nUhf+Zsd2oc2GytHS+vvNj+YuWYbSSkkUlbT+yd79xULh7OrZNdh/dXWxsFhl0uBMYifO+T5XJyWWi+uzfTxMVY1Ch/B4B8tdFXWS3Y8ab4zJnsYW2x+2IjIRmw0tlqPfsWQyym0YzDowsrQyX5hdub66dn791o3Fr/+rlf0Egk5FRFNpadZxkpzIXS8sDcCPqmK3Ky6XcufOnbtvJS2WsoKNUsbKR19BetEE5kr2vT7eLjqVTMk5MfDi0ZW1K4vPL95au37t3UVD/bb3lhEnqthqA1GHiH37txOBwX/5/KGd1MhASnc37hz7+M6d7x5qNFuHolE+6VRcHdOldNNQS+sOBkPR+YWhxlfRwWQdWbcjM3D4369ee77xS4uraJwf0ulfDIRrBFWodl4Qvf9LTofTiabBJey6858//vjFFxOjfaPL4VAq8G1s5aMmtOPsrqQK52ZEsBRc3OZQnOJUSVSz7UrD773/UnPLw7/7U6Sm2yX7dzkv5scvRSQwSt9qcooOZEFhlyDeeZnv3BMeW16+WSyuzCxdSAUCcUMSNplmm3LyCwZC9aihJUv9yeMVsS2NBT/8cMPjwo4v/Y7ly6JbiXn/XdXwZGZRvJ0+WeloR7R9+k93JsycvHxzZubZffsLhbmZuXw4fCHBsTsNoAKYLRBy4wabCxxEpQFqoOhGccf7dsFZ+eO2p0JeSitAwNh20V2xDNz+6CNqEpQH/zzWcxB5P7Ic+lpvbv3WwsJCvr+zTqfducvSVon25lte3rBjvLxxp/yRqjidCF2RerrsRrkkuJux/a8RNlXWAbeAicqPXnr11f80PPEDcyIUGsuvF3LLy2N7vxZYObOwdi6/z+vhtF4aZNAuoCfRQJj1H3vh+Y/H22x/bBNahTahoyPz8YDZLjocb3jilFPYijBczRj2DF68FJBHAmP5fHF9DcsvFgtLXs+2bYHcSrirW+Lvux0husgihCK2IutkGna22RqEhjaXAyCC8PuPvbC9xd3ePjCY2kKA4VW1sa5O7p3Z25srzq2vn1u7df78+fmFXI+kr6+V/CHvbk7ffO/YCi01I8GosJdIl1+A54uUhhxtbW0N2xWHy+W8FDq4BdIqVjZUPReLBiK9Y1dZgju/cGttbT73dFe3Xqer//xvGQxccuMfqhDgQZsDcmMCQDsHEwnIpe221rbWxwmytcW2a5f409Xrc5rhEZGbG98/9Gc94UtXrq4U1tYX1iFr59CzhvcG0UrTDfZajj80wQ6rstlpePoWFRd6XkXEG3+EqRkwKiekInZ0iI73/8e7FPGQBnWz3GyOJZavX1k9U6A0DTk3P1+Yyx0PBb0+7SSG5w7ptBN8arkAQTNqDARXRztNDIRWRm0XPhedHeLk0aV9YQ1EUEsWPhaKFFDGCteBgrI5P78A54ocD3q9dPBPInXrTclJQpmmLyS0UwCLYkfJgYzmxuYJ7RN6JiZQ5hR9mO5LhQgE4B2baU4O7u1fRPK/XljVQOZQ6iORcNArST6woDulcR+vs4w3p6E1NwovwWQrd+/84OMfKG4XdjooCAyCgUOmlCFP78UcNqZwbFXRe7s6e565gTp29iyZfX5+dmYmFQ6Fg0G0xb4o5/dHoxL21Dw6t0PmZGmDNEYymf5mYjCa3NjcdLdS6qewFt1Z9tULt2KOhVdWiIkwVToZ6+qKj7x/+fIPV1fXCoUzxZWlXH8YEQmLeCUfHTBHY+imvRLnkRNBH/9wmX2DA34/HJU9ks/8vcmNDTdqNeOh3fMC28xzsVB4lLbY047yUGdncOTGjcs/PIuyOZvLU1MUpiM0gLCjOOgKdbMrmEgkwsfhb7Xsnheh8HQkpY/yZnP6zt0NUehgX06hW3iQ9ODg2NNP0+HzdOXkgBw8cuPaOz9c/WB2YQGm6O8HRCIYDwa7uhkEQLxoZrqCRK5T4ulGOUNRTXSfxoCF+A9ZrZk7H6EIq6rTTjfu1LI5kcr1B2tUoc0xnRz74Mb/e+dHMPtiLpeHJQ6GQ4lEKHgEfQWY0PdC6FDKi5YJ3IJeWeL0Zkt6cgO75iTtxdkqpGg0qh8qb3xSNtc/UGtRTiXNknRpdjlUY3O32abTJxZ/tHj5VmF1NnLw2ZlwACjgkaAWCWZn4uuOofkjJokEcA0cz/PY6KoKfaGAndqwU2dUT2PSVF9Xq681maP6oPTeXD5Vg+QgPj5u+OIKudU8QPr7oREyB5M4MYkBg90P8O4mdTFnIEuhHJcVI7vPCBdn3+2I0q0oA51G1Rmi3/Qd8azk5/IA6ehwl+svXF19N7cCazwTCjMGwa44HdB6uzE1kcELOtIOJuBz8TiB0MNoNtEtnGpGoL08e6nXcz4/B7UGn7yen12oQWyKlfRDV86upL7W8zRWGdLUFI/v7trdRfdM6PScGYTsTkzw+e6Y1A34qJ+vJWEYHO+L6o1GHQCiPi7qPxTseiZxYD5fXKhBv6tOHrtYyGln/XENoauru3u3d3dXsIvWXxV8AAjybPq4G3RidHQHHDpQ1YMQbzQa6Q6CxP1z+Y1XBvfmXltaz82dr0FFV08l+iOyNxZOHUkABEqClkhNWDi0BnUxjK4uQBwMHQnB7eikHpbqlui+IzvSZFJr5Ovp0NBTx8kBy6Gx9ZGV+QgDUR2Hep7pkePxp2mJDAIrxTK9CBNCofsLXi+e9h4Mh/cyywf3xtlNIYlurpIZ6GSFkaKQ8dGXC0IvJpfWX7wyPwObqNnv6+WgRGf97IQcmmLr7vZ2w/R7ycu6dmu3gDRzkBzBI757NyxvgNPS7BSx9IxwibK7M7G9I688dOnRr8/nzxRrlLSZvBPrxWRA0UAA0Q1/jcOTMB+Mw4S8ggmBIB3IXrr3w9FXvaQoRSPSC4sWEIntTTW++kLSeKBYWP//1QYHbPkxkg0AAAAASUVORK5CYII=" alt="" />
+</body>
+
+<style>
+  canvas {
+  }
+  img {
+    position: absolute;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    display: none;
+  }
+  body {
+    /*background: rgb(25, 60, 62);*/
+  }
+</style>
+
+<script src="mapgen.js"></script>
+<script>
+  const [canvasWidth, canvasHeight] = [3200, 2300];
+  const [gridWidth, gridHeight] = [100, 100];
+  const gridSize = gridWidth * gridHeight;
+
+  const euroString = 
+`
+~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s####MMMM^f##############~~~~~~~~s###############################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s##^MMM^^#f##############~~~~~~~~s###############################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s###^MMM##f###############~~~~~~~~s###########~~#################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s#^MMMM#f#################~~~~~~~~s#####~~~~~~~s################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s#^MMM^f###################~~~~~~~~~~~~~~~~~~~~s################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s##M^#f##################CC~~~~~~~~~~~~~###~~s##################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s#M#f####~###########rrrC~~~~~~~~~~~##C######s#################g
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~s##f####~~~#########r###~~~~~~~~~~~##########s#################g
+~~~~~~~~~~~~~~####~~~~~~~~~~~~~~~~~~s##f##~~~~~########r##~~~~~~~~~~~#############s################g
+~~~~~~~~~~~~~~####~~~~~~~~~~~~~~~~~~~s#f#~~~~~~########r##~~~~~~~~~~##~~~##########s###############g
+~~~~~~~~~~#~~#^^#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f######r##~~~~~~~~~~~~~~~##########s###############g
+~~~~~~~~~~~#~#^^^####~~~~~~~~~~~~~~~~~~~~~~~#~~~f######r##~~~~~~~~~~##~~~###########s##############g
+~~~~~~~~~~~~#^^^^^##~~~~~~~~~~~~~~~~~~~~~~~##~~~~f####r###~~~~~~~~~####~~###########s##############g
+~~~~~~~~~~~~##^^^^##~~~~~~~~~~~~~~~~~~~~~#####~~~f####r##~~~~~~~~~~#####C###########s######CC######g
+~~~~~~~~~~~~#^^^^^#~~~~~~~~~~~~~~~~~~~~~~#####~~~~frrr####~~~~~~~~######r###########s######CC######g
+~~~~~~~~~~~~~#^^^^#~~~~~~~~~~~~~~~~~~~~~~####~~~~~fr####~~~~~~~~~~#######r###########s#############g
+~~~~~~~~~~~~~###C###~~~~~~~~~~~~~~~~~~~~~####~~#fCr##~~~~~~~~~~~~~#######r###########s#############g
+~~~~~~~~~~~~~####r###~~~~~~~~~~~~~~~~~~~~####~~##~f##~~~~~~~~~~~~~~#######C###########s############g
+~~~~~~~~####~~###r###~~~~~~~~~~~~~~~~~~~~~####~#~~~~~~~~~~~~~~~~~~~f##################s############g
+~~~~~~~######~####r###~~~~~~~~~~~~~~~~~~~~##~~#~~~~~~~~~~~~~~~~~####f##############g###s###########g
+~~~~~~~######~~~~#rr###~~~~~~~~~~~~~~~~~~~###~~~~~~~~~~~~#####~~#####f############g#####s##########g
+~~~~#########~~~~~##r###~~~~~~~~~~~~~~~~~~####~~###~~~~#######~#######f##########g######s##########g
+~~~~########~~~~~~##r###~~~~~~~~~~~~~~~~~~####################~########f########g#######s##########g
+~~~~#######C~~~~~~##r###~~~~~~~~~~~~~~########################~#########f######g#########s#########g
+~~~~~#######~~~~####r####~~~~~~~~~~###########################~##########f####g###############s####g
+~~~~~~######~~~~####r######~~~~~~~~CrrrrrrrrrrrrrCC############~~~C#######f##g#####################~
+~~~~~#######~~~~####r#######~~~~~~~b##############C##############~r################################~
+~~~~#######~~~~#####r#######~~~~~##r~~~###########r##############~r################################~
+~~~~#####~~~~~~#####r######~~~~~###r##~~~~########r########rrrrrrb#################################~
+~~~~~##~~~~~~~~~#####rCC~~~~~~~~###r######~~#######rrr#####r#####~#################################~
+~~~~~~~~~~~~~~~~######C####~~~#####r#######~#########rrCrrr######~#########rrrrrrCC################~
+~~~~~~~~~~~~~~~###########~~#######r#######~############r########~#########r######r################~
+~~~~~~~~~~~~~~####~~~~~~~~~########r#######~####f#g#####r###~~~~~##########r######r#~##############~
+~~~~~~~~~~~~~#~~~~~~~~~~~~~########r########~##f#g######r##################r######r#~##############~
+~~~~~~~~~~~~~~~~~~~~~~~~~~#########r##########f#g#######r##################C######r##~#############~
+~~~~~~~~~~~~~~~~~~~~~#~~~~#########r####################r#########################r##~#############~
+~~~~~~~~~~~~~~~~~~~~~###C~#########r#########f#g##f#g###r#########################r###~############~
+~~~~~~~~~~~~~~~~~~~~~#####~~#######r########f#g####f#g###r#####^##################r###~############~
+~~~~~~~~~~~~~~~############~######r########f#g######f#g##r#########################rrCbrr##########~
+~~~~~~~~~~~~~~~#############~~~CCrr#######f#g#############r###########f##^#g##########~#r##########~
+~~~~~~~~~~~~~~~~##############~C########^#############^###r##########f###^M#g#########~##rr########~
+~~~~~~~~~~~~~~~~~~~##########rbrrr###########MMM^M^MMM^#CrrrCrrr######f##^M^#g########~###r########~
+~~~~~~~~~~~~~~~~~~~~######rrr#~~~r########^MMM^MM^MMMM##r######rr######f##MM###g######~####r#######~
+~~~~~~~~~~~~~~~~~~~~####rrr#######rrrrrC^M^MMMM^MM#M^###r########r######f##^#g########~####r#######~
+~~~~~~~~~~~~~~~~~~~~~##r##########r###^MMMMMMM^MM^^#####r########r####^#f##^#g#######rbrrrrrr###~~~~
+~~~~~~~~~~~~~~~~~~~~~~#r##########r##^MM^^#MM^^^^#######r########Crr####f###^#g######C~~~###r#~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~C###########C##^M^^###############C#########frrrrr#####g#######~~~~~~~r~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~##########~##M^###########~f##g###########f##^#Mr^M#^g######~~~~~~##r##~~~~~
+~~~~~~~~~~~~~~~~~~~~~~f~~g####M#^#~#MM^##########~C~f##g##########f##^##rrrrCg######~~~~~~~#r####~##
+~~~~~~~~~~~~~~~~~~~~~~f#~~g###MM^#~^MMM##########~~~~f##g#########f##^####g########~~~~~~~~#C##~~~~~
+~~~~~~~~~~~~~~~~~~~~~~f##~~g##^M##~^MMM##########~~~~~f##^g#######f##^####g#######~~~~~~~~~Cr#~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~f###~g######~#^^^^##~f##g##~~~~~f##^^##^g####f#^^^##g#######~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~f###~g######~#####C~~~f##g##~~~~~f##^^^^#g#C##f##^^^^##g####~~~~~~~~~~~~~~~~~~
+~~~~~~~f######~#~~~~~f####~g######~####~~~~~~f##g##~~~~~f###^MM^g################~~~~~~~~~~~~~~~~~~~
+~~~~~~f####^#^^^##########~g###~~~~###~~~~~~~f###g##~~~~~f###MMM^g###############~~~~~~~~~~~~~~~~~~~
+~~~~~~f####MM^^MM#####^^MMM^^g#~~~~~~~~~~~~~~f####gg~~~~~~~f##^MM####^g#########~~~~~~~~~~~~~~~~~~~~
+~~~~~~f####M^^^^^######^#^C^M##~~~~~~~~~~~g~~~f####gC~~~~~~~f##^^###^^##gC######~~~~~~~~~~~~~~~~~~~~
+~~~~~~~f##M^###d^MMM#######M###~~~~~~~~~~g^#~~~f###gr#~~~~~~~~f#####^^#^##g#####~~~~~~~~~~~~~~~~~~~~
+~~~~~~f#######d#^MMM^########rC~~~~~~~~~~g#~~~~~f##r^##g~~~~~~~f^^^##^#MMMg#####~~~~~~~~~#^^^^#~~~~~
+~~~~~~~f######d#MMMM^#rrrrrrrC~~~~~~~~~~~~g~~~~~~fCCCr##g~~~~~~f#^^#####^^g#######~~~~~~##MM^###~~~~
+~~~~~~~f#####d#^MMMMCC#######~~~~~~~~~~~~~~~~~~~~~~f#r###g~~~~~f#^^#^######g#####Cb~~~~##d^M^######~
+~~~~~~~f###d^MMM^~~~rMM###~~~~~~~~~~~~~~~g##~~~~~~~~f#r###d#~~~f#M^######~~#g##~~~C###d^MMMMM^####^~
+~~~~~~~f###d^M^~~rrrMMMM##~~~~~~~~~~~~~~~g##~~~~~~~~~fC##gd#~~~fCM^##g##~~~~~~~~~~###d^MMMM^##^#^^^~
+~~~~~~~~f##d~~~~rr#MMMM##~~~~~~~~~~~~~~~~g##~~~~~~~~~~f##g~##~~f##^g##~~~~~~~#######d####MM^#MMMMMM~
+~~~~~~C~~~~~drrr###^M^##~~~~~~~~~~~~~~~~~g##~~~~~~~~~~~f#g~~#~~f##^g##~~~~~~######dMMM^^^MM^^MMMMMM~
+~~~~~~drrrrrrr##########~~~~~#~#~~~~~~~~~###~~~~~~~~~~~~fg~~~~~~f###g##~~~~~~####d^MMMMMMMMMMMMMMMM~
+~~~~~~d######r##########~~~~~~~~~~~~~~~~~##~~~~~~~~~~~~~fg#~~~~~~f^^g##~~~~~~d####MMMMM^MMMMMMMMMMM~
+~~~~~~d######r####^M####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~fg~~~~~~~~f^g##~~~~~~~d####MMMMMMMMMMMMMMMM~
+~~~~~~d######r#####M####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f#^g###~~~~d#####^MMMMMMMMMMMMMMM~
+~~~~~~~d#####r####^M###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~g##~~~~~~~~~~f^#g##~~~~d#####MMMMMMMMMMMMMMMM~
+~~~~~~~d#####r#####M###~~~~~~~~~~~~~~~~~~~~~~~~~~##C#####~~~~~~~~~f^#^#C~~~~~~~d###MMMMMMMMMMMM^M^M~
+~~~~~~d######r###MM^##~~~~~~~~~~~~~~~~~~~~~~~~~~~~#####~~~~~~~~~~~~f#^#~~~~~~~d###^MM^^MMMMMMM^##^#~
+~~~~~~~d#####r###MM##~~~~~~~~~~~~~~~~~~~~~###~~~~~~####~~~~~~~~~~~~f##~~~~~~~~~d##^MM^#^MMMM^^#####~
+~~~~~~~~~~~##r######~~~~~~~~~~~~g#~~#######dC#~~~~~~~##~~#~~~~~~~~~~f##~~~~~~~~~d##MM#C#^M^^^######~
+~~~~~~~~~~~~gr#~~~~~~~~~~~g####C##########d###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~d^##~##^M##~~~###~
+~~~~~~~~~~~~gC~~~~~~~~~~~g########MM^####d####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~d#~~~####~~~~###~
+~~~~~~~~~~~~~~~~~~~~~~~~g#########MM^d^^######~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###~
+~~~~~~~~~~~~g#~~~~~~~~#####^#######dMMMMM^####~~~~~~~~~~~~~~~~~~~~~~~~#~~~~~~~~~~~~~~~~~~~~~~~~####~
+~~~~~~~~~~~~g#^####~#####d^MM#######^^MMM^####~~~~~~~~~~~~~~~~~~~~~~~~~~#C##~~~~~~~~~~~~~###~~~~###~
+~~~~~~~~~~~~g##^^####d^^MMMMMMMMM#######^#####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###~~~~###~
+~~~~~~~~~~~dg######dM^MMMMMMMMMM##############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#~~~~~^##~
+~~~~~~~~~~~d#g####dMMMMMMMMMMMM##############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^MM^~
+~~~~~~~~~~d###^MM^MMMMMMMMMMMM###############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^M^#~
+~~~~~~~~#C###MMM^MMMMMMMMMMMM^################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####~
+~~~~~~~#####MMMMMMMMMMMMMMMM####################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~####~
+~~~~~~~#####^MMMMMMMMMMMM^#######################~#~~~~~~~~~~~~~~~~###~~~~~~~~~~~~~~~~~~~~~~~~###^#~
+~~~~~~######MMMMMMMMMMMM^#############################~~~~~~~~~~~~#####~~~~~~~~~~~~~~~~~~~~~~~###^^~
+~~~~~~#####^MMMMMMMM^M^################################~~~~~~~~~########~~~~~~~~~~~~~~~~~~~~~~#####~
+~~~~~#####MMMMMMMM^#^##################################~~~~~~~~~##########~~~~~~~~~~~~~~~~~~~~#####~
+~~~~~####MM^MMM^MM######################################~~~~~~~~#############~~~~~~~~~~~~~~~~######~
+~~~~##MMM^#MMM^##^########################################~~~~~~################~~~~###g#~C#d##^^##~
+~~~~~#^#^MMMM^##############################################~~~~########################g~#d####^^#~
+~~~~~##^MMMMM^################################################~~#########################~#####^^^^~
+~~~~~##MM^#^#############################################################################~#####M^^M~
+~~~~~#MM^################################################################################~#####M^MM~
+~~~~#^M##################################################################################~#####M#^M~
+~~~#######################################################################################~#M#^M#^M~
+~~~#######################################################################################~#M#MM#^M~
+~~#########################################################################################~^##M^^M~
+~##########################################################################################~####MMM
+`  
+
+  document.body.innerHTML += `<canvas id="canvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>`;
+
+  let tiles = document.getElementById("tiles");
+  let europe = document.getElementById("europe");
+
+  let canvas = document.getElementById("canvas");
+
+  /**
+   * @type CanvasRenderingContext2D
+   */
+  let ctx = canvas.getContext("2d");
+
+  function subImage(image, left, top, width, height) {
+    let canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let context = canvas.getContext("2d");
+    context.drawImage(image, left, top, width, height, 0, 0, width, height);
+    return canvas;
+  }
+
+  /**
+   * Creates a 12-sector masks for cutting up hexes
+   */
+  function createMask() {
+    let canvases = [...Array(13)].map(() => {
+      let canvas = document.createElement("canvas");
+      canvas.width = 32;
+      canvas.height = 32;
+      let data = canvas.getContext("2d").createImageData(32, 32);
+      return { canvas, data };
+    });
+
+    for (let x = 0; x < 32; x++)
+      for (let y = 0; y < 32; y++) {
+        let point = (y * 32 + x) * 4;
+        let angle = Math.atan2(15.5 - x, y - 15.5);
+        let sector = Math.floor((angle / Math.PI + 1) * 6);
+        canvases[sector].data.data.set([255, 255, 255, 255], point);
+        canvases[12].data.data.set(
+          [
+            (sector / 12) * 255,
+            255 - (sector / 12) * 255,
+            (sector % 2) * 255,
+            255,
+          ],
+          point
+        );
+      }
+    for (let c of canvases) {
+      c.canvas.getContext("2d").putImageData(c.data, 0, 0);
+    }
+    return canvases.map((c) => c.canvas);
+  }
+
+  let masks = createMask();
+
+  function cutImageUp(image, left = 0, top = 0) {
+    let imagePieces = [];
+    let r = 16;
+    let R = 24;
+
+    for (let part = 0; part < 3; part++) {
+      for (let sector = 0; sector < 12; sector++) {
+        let canvas = document.createElement("canvas");
+        canvas.width = r * 2;
+        canvas.height = r * 2;
+        let ctx = canvas.getContext("2d");
+
+        ctx.drawImage(masks[sector], 0, 0);
+        ctx.globalCompositeOperation = "source-in";
+
+        ctx.drawImage(
+          image,
+          left,
+          top + part * r * 2,
+          r * 2,
+          r * 2,
+          0,
+          0,
+          r * 2,
+          r * 2
+        );
+
+        ctx.globalCompositeOperation = "source-over";
+
+        imagePieces.push(canvas);
+      }
+    }
+
+    return imagePieces;
+  }
+
+  const neighborDelta = [
+    [0, -1],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [-1, 0],
+    [-1, -1],
+  ].map(([dx, dy]) => dy * gridWidth + dx);
+
+  function generateGrid(heights) {
+    let isString = heights && typeof heights == "string";
+    console.log(isString);
+    if(isString)
+      heights = heights.replace(/[ \n\t]/gm,"")
+
+    let biome = "g";
+
+    let grid = [...Array(gridSize)].map((v, i) => {
+      let elevation, water, mountain, hill, road, desert, forest, snow, city;
+
+      if(isString){
+        let l = heights[i - Math.floor(i/gridWidth/2)];
+        elevation = l=="~" || l=="b"?-1:l=="M"?0.9:l=="^"?0.7:0.1;
+        if("gfds".includes(l)){
+          biome = l;
+        }
+        road = (l=="r" || l=="b");
+        water = elevation < 0;
+        desert = !water && biome == "d";
+        forest = !water && biome == "f" && elevation < 0.5;
+        snow = !water && biome == "s";
+        city = l=="C";
+        if(city)
+          road = true;
+      } else {
+        elevation = heights ? heights[i] - 1 : random() - 0.3;
+        road = !water && !mountain && random() < 0.3;
+        desert = !water && elevation < 0.3 && random() < 0.3;
+        forest = !desert && !water && elevation < 0.5 && random() < 0.6;
+      }
+
+      water = elevation < 0;
+      mountain = elevation > 0.8;
+      hill = elevation > 0.6 && !mountain;
+
+      return (
+        (water ? 1 : 0) +
+        (road ? 2 : 0) +
+        (desert ? 4 : 0) +
+        (mountain ? 8 : 0) +
+        (hill ? 16 : 0) +
+        (forest ? 32 : 0) +
+        (snow ? 64 : 0) +
+        (city ? 128 : 0)
+      );
+    });
+    return grid;
+  }
+
+  function demonstrateSlices(slices) {
+    for (let i = 0; i < slices.length; i++) {
+      let slice = slices[i];
+      ctx.drawImage(slice, Math.floor(i / 12) * 16, (i % 12) * 16);
+    }
+  }
+
+  function xy2xy(xy) {
+    let x = xy % gridWidth;
+    let y = (xy - x) / gridWidth;
+    return [x, y];
+  }
+
+  function screenPos(xy) {
+    let [x, y] = xy2xy(xy);
+    x -= y * 0.5;
+    if (x < 0) {
+      x += gridWidth + 0.5;
+      y -= 1;
+    }
+    return [x * 32, y * 24];
+  }
+
+  function drawTile(grid, xy, slices, test) {
+    let [tileX, tileY] = screenPos(xy);
+    if (!test(grid[xy])) return;
+    for (let subi = 0; subi < 12; subi++) {
+      let imagei = subi;
+      let side = Math.floor(subi / 2);
+      let neighbor2Side = (side + (subi % 2 ? 1 : 5)) % 6;
+      let neighbor1 = test(grid[xy + neighborDelta[side]]);
+      let neighbor2 = test(grid[xy + neighborDelta[neighbor2Side]]);
+      let mode = neighbor1 ? 2 : neighbor2 ? 1 : 0;
+      imagei += mode * 12;
+      ctx.drawImage(slices[imagei], tileX, tileY);
+    }
+  }
+
+  function drawTerrain(grid) {
+    let waterSlices = cutImageUp(tiles, 0, 0);
+    let roadSlices = cutImageUp(tiles, 32, 0);
+    let bridgeSlices = cutImageUp(tiles, 160, 0);
+    let hillRoadSlices = cutImageUp(tiles, 192, 0);
+    let desertSlices = cutImageUp(tiles, 64, 0);
+    let grassSlices = cutImageUp(tiles, 128, 0);
+    let snowSlices = cutImageUp(tiles, 160, 96);
+    let hill = subImage(tiles, 96, 32, 32, 32);
+    let city = subImage(tiles, 128, 160, 32, 32);
+    let desertHill = subImage(tiles, 96, 160, 32, 32);
+    let mountain = subImage(tiles, 128, 128, 32, 32);
+    let forest = subImage(tiles, 96, 96, 32, 32);
+    let forestRoad = subImage(tiles, 96, 128, 32, 32);
+    let grassTile = subImage(tiles, 128, 96, 32, 32);
+
+    for (let xy = 0; xy < gridWidth * gridHeight; xy++) {
+      let [tileX, tileY] = screenPos(xy);
+      let v = grid[xy];
+      let water = v & 1;
+      let road = v & 2;
+      let desert = v & 4;
+      ctx.drawImage(grassTile, tileX, tileY);
+      drawTile(grid, xy, waterSlices, (v) => v & 1);
+      drawTile(grid, xy, desertSlices, (v) => v & 4);
+      drawTile(grid, xy, snowSlices, (v) => v & 64);
+      //drawTile(x, y, grassSlices, (v) => v & 32);
+      if (v & 8) ctx.drawImage(mountain, tileX, tileY);
+
+      if (v & 16 && !road) ctx.drawImage(desert?desertHill:hill, tileX, tileY);
+
+      if (water) {
+        drawTile(grid, xy, bridgeSlices, (v) => v & 2);
+      } else {
+        if (v & 16) drawTile(grid, xy, hillRoadSlices, (v) => v & 2);
+        else drawTile(grid, xy, roadSlices, (v) => v & 2);
+      }
+
+      if (v & 32) ctx.drawImage(road ? forestRoad : forest, tileX, tileY);
+
+      if (v & 128) ctx.drawImage(city, tileX, tileY);
+    }
+
+    //ctx.drawImage(masks[12], 0, 0);
+  }
+
+  function parseEurope() {
+    let size = [100, 100]
+    let c = createCanvasCtx(...size);
+    c.ctx.drawImage(europe, 0, 0);
+    let edata = c.ctx.getImageData(0, 0, size[0], size[1]);
+    let m = [],
+      t = "";
+    for (let i = 0; i < edata.data.length; i += 4) {
+      let rgb = edata.data.slice(i, i + 3);
+      let [r, g, b] = rgb;
+      t = b > g ? "~" : r > 160 ? "M" : r > 140 ? "^" : "#";
+      m.push(t);
+      if (i % (size[0] * 4) == 0) m.push("\n");
+    }
+    console.log(m.join(""));
+  }
+
+  const miniMapScale = 0.2;
+  const heightMapSize = [1000, 500];
+
+  let hmap = generateHeightMap(...heightMapSize);
+  let hmapImage = heightMap2Image(hmap);
+
+  //let grid = generateGrid(heightMap2Grid(hmap));
+
+  let grid = generateGrid(euroString)
+
+  //parseEurope();
+
+  tiles.onload = () => {
+    drawTerrain(grid);
+
+    /*ctx.drawImage(
+      hmapImage,
+      0,
+      0,
+      heightMapSize[0],
+      heightMapSize[1],
+      0,
+      0,
+      heightMapSize[0] * miniMapScale,
+      heightMapSize[1] * miniMapScale
+    );*/
+  };
+</script>

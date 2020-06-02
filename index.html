@@ -1,0 +1,263 @@
+<style>
+  .all {
+    display: flex;
+    flex-flow: row;
+  }
+  .number,
+  .checkbox {
+    width: 5em;
+    grid-column: span 2;
+  }
+  .range {
+    width: 25em;
+  }
+
+  form {
+    margin: 1em;
+    width: 40em;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  #minimaps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    cursor: pointer;
+  }
+  #tooltip {
+    position: absolute;
+    grid-template-columns: 0fr 1fr;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 1em;
+    box-shadow: 2px 2px 2px black;
+    width: 260px;
+  }
+  #tooltip div {
+    padding-left: 5px;
+  }
+
+  #tooltip div:nth-child(odd) {
+    text-align: right;
+  }
+</style>
+
+<body>
+  <div id="tooltip">tooltip</div>
+  <div class="all">
+    <div>
+      <form id="form" onchange="applySettings()"></form>
+      <button onclick="resetSettings()">Reset to default</button>
+    </div>
+    <div>
+      <div id="map"></div>
+      <div id="minimaps"></div>
+    </div>
+  </div>
+</body>
+
+<script src="worldgen.js"></script>
+
+<script>
+  let mouseOffset = [0, 0];
+
+  const parameters = [
+    ["seed", "number"],
+    ["width", "number"],
+    ["height", "number"],
+    ["terrainTypeColoring", "checkbox"],
+    ["discreteHeights", "range", { max: 40 }],
+    ["scale", "range", { max: 10 }],
+    ["pangaea", "range", { min: -5, max: 5 }],
+    ["seaRatio", "range"],
+    ["riverAge", "range", { max: 100000 }],
+    ["riversShown", "range", { max: 1000 }],
+    ["hillRatio", "range", { max: 0.3 }],
+    ["mountainRatio", "range", { max: 0.3 }],
+  ];
+
+  let miniMapSize = 200;
+
+  let defaultSettings = JSON.stringify({
+    mapMode: 0,
+    seed: 1,
+    width: 600,
+    height: 600,
+    scale: 1,
+    pangaea: 0,
+    discreteHeights: 0,
+    riverAge: 50000,
+    riversShown: 400,
+    terrainTypeColoring: false,
+    seaRatio: 0.55,
+    hillRatio: 0.12,
+    mountainRatio: 0.04,
+  });
+
+  let settings = {};
+
+  function resetSettings() {
+    settings = JSON.parse(defaultSettings);
+    rebuildForm();
+    applySettings();
+  }
+
+  function rebuildForm() {
+    let form = document.getElementById("form");
+    form.innerHTML = "";
+
+    for (let param of parameters) {
+      let [id, type, also] = param;
+      also = also || {};
+      switch (type) {
+        case "checkbox":
+          form.innerHTML += `<div>${id}</div><input class="checkbox" type="checkbox" id="${id}" ${
+            settings[id] ? "checked" : ""
+          } />`;
+          break;
+        case "number":
+          form.innerHTML += `<div>${id}</div><input class="number" type="number" id="${id}" value="${settings[id]}" />`;
+          break;
+        case "range":
+          let min = also.min || 0;
+          let max = also.max || 1;
+          let step = also.step || (max - min) / 100;
+          form.innerHTML += `<div>${id}</div><input class="range" type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${settings[id]}"/>
+        <div id="${id}_value"></div>
+        `;
+          break;
+      }
+    }
+  }
+
+  settings = JSON.parse(localStorage.mapGenSettings || defaultSettings);
+
+  rebuildForm();
+
+  function saveSettings() {
+    localStorage.mapGenSettings = JSON.stringify(settings);
+  }
+
+  function applySettings() {
+    for (let [id] of parameters) {
+      let element = document.getElementById(id);
+      settings[id] =
+        element.type == "checkbox" ? element.checked : Number(element.value);
+      let id_value = document.getElementById(id + "_value");
+      if (id_value) id_value.innerText = String(settings[id]).substr(0, 8);
+    }
+
+    saveSettings();
+
+    generate(settings);
+  }
+
+  let maps = [],
+    miniMaps = [];
+
+  function showMap(data, title, fun, scale = 1 / 4) {
+    let image = data2image(data, settings.width, fun);
+    let mini = rescaleImage(image, image.width * scale, image.height * scale);
+    let ctx = context2d(mini);
+    ctx.font = "14px Verdana";
+    ctx.fillStyle = "white";
+    ctx.strokeText(title, 5, 15);
+    ctx.fillText(title, 4, 14);
+    document.getElementById("minimaps").appendChild(mini);
+    let id = maps.length;
+
+    if (id == settings.mapMode)
+      document.getElementById("map").appendChild(image);
+
+    mini.id = "mini_" + id;
+    maps.push(image);
+    miniMaps.push(mini);
+    mini.onclick = () => {
+      settings.mapMode = id;
+      saveSettings();
+      document.getElementById("map").innerHTML = "";
+      document.getElementById("map").appendChild(image);
+    };
+  }
+
+  function generate(settings) {
+    console.time("generation");
+    let generatedMap = generateMap(settings);
+    let {
+      elevation,
+      folds,
+      rivers,
+      wind,
+      temperature,
+      humidity,
+      biome,
+    } = generatedMap;
+
+    console.timeEnd("generation");
+
+    document.onmousemove = (e) => {
+      let mouseOffset = [e.offsetX, e.offsetY];
+      let target = e.target;
+      let tooltip = document.getElementById("tooltip");
+      tooltip.style.left = e.pageX - 300;
+      tooltip.style.top = e.pageY + 15;
+      let isCanvas = e.target.tagName == "CANVAS";
+      tooltip.style.display = isCanvas ? "grid" : "none";
+
+      if (isCanvas) {
+        let localX = (e.offsetX / target.width) * settings.width;
+        let localY = (e.offsetY / target.height) * settings.height;
+        let ind = Math.floor(localX) + Math.floor(localY) * settings.width;
+        tooltip.innerHTML = Object.keys(generatedMap)
+          .map(
+            (key) =>
+              `<div>${key}</div><div>${
+                key == "biome"
+                  ? biomeNames[generatedMap[key][ind]].toUpperCase()
+                  : generatedMap[key][ind]
+              }</div>`
+          )
+          .join("");
+      }
+    };
+
+    console.time("draw");
+    document.getElementById("map").innerHTML = "";
+    document.getElementById("minimaps").innerHTML = "";
+    maps = [];
+    miniMaps = [];
+
+    showMap(
+      elevation,
+      "elevation",
+      elevation2Image({ elevation, rivers }, settings)
+    );
+
+    showMap(folds, "tectonics", (v, i) => [0, 0, 0, v * 255]);
+
+    showMap(temperature, "temperature", (v, i) => [
+      v * 10 + 100,
+      255 - Math.abs(v - 10) * 10,
+      155 - v * 10,
+      255,
+    ]);
+
+    showMap(wind, "wind", (v, i) => [v * 100, 0, -v * 100, 255]);
+
+    showMap(humidity, "humidity", (v, i) =>
+      rivers[i] && elevation[i] > 0
+        ? [0, 0, 0, 255]
+        : i % settings.width < 20
+        ? [wind[i] * 100, 0, -wind[i] * 100, 255]
+        : elevation[i] < 0
+        ? [0, 0, 0, 255]
+        : [300 - v * 1000, elevation[i] * 200 + 50, v * 350 - 150, 255]
+    );
+
+    showMap(biome, "biome", (v, i) =>
+      elevation[i] < 0 || rivers[i] ? [0, 40, 80, 255] : contrastColors[v]
+    );
+
+    console.timeEnd("draw");
+  }
+
+  applySettings();
+</script>

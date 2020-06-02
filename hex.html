@@ -1,0 +1,114 @@
+<body>
+  <img
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABgCAYAAAB8InCYAAAAB3RJTUUH5AUTAzg0/yByIgAAABd0RVh0U29mdHdhcmUAR0xEUE5HIHZlciAzLjRxhaThAAAACHRwTkdHTEQzAAAAAEqAKR8AAAAEZ0FNQQAAsY8L/GEFAAAABmJLR0QA/wD/AP+gvaeTAAACmklEQVR4nO2YTU7EMAyFy5yC0zDiECzgNGy4Ciw4BALmFByGQsoU3MROnx078yMiRUK09fviZJLnDOM4DpY+3A9j3k1xPIRbQFyFLSAhwhqQUGEExCz88rEpugXERdgKM+lqhS8fdj999/73N9NhkLUXaiJIX4PYDJX2cld97NJEhSR++/zWLJBipFjSYNj/eolTCKnF55hAcJkoAELmfTv+QuSNVZteTB/tP2xurxfiowXAYvTpo8qHXq3bGjgxAM/5X23Mnt+6/RY9nRvfnTsf+kwBWdDXj5+LRwVAeuHp5mrqPRqbgZnSE0KKJU5BnioPcTbmmhuiLocuKGmhabzA1DV+ELVjiBuqumIrCH2OOuPwmkASVlVGEcLq0kwLAsfUACAg6lgWAA7EHMNDvAXCNf0WELMwsum4ANQ2InTLNQGs7YRSMarZBVkAZAtuKUZzEHhxIeI1CC47ky6yuKw+sTjKuanSjs6rz5ob6lR6eUHqkH4tWWGXto51wfavzijtmXGhtaSdarKmNHIaqnWBpxPOm9qW92r/AMcFMF/ReF7RzU2K2T0D4jXd4gHZuVzaPh57TZdfHk4ved+Qodd0EXOfQxQ3poc4ihfnQnIlXKUrfeAhujAluR+kLkgqvbUiXJyqK0YLUCpM4TUWvbkKmsWt1ZJbOWYpSlSlmRYEjqkBQEDUsSwAHIg5hvVD7ifYBQDZcEIALDufC4DHvm8CiDiAIAB14PmSWrrEXgEJHTECchBh2k8YwDD3J5SBfHQNIzyeDAgDOtIpaBmZcrrOIANodkwAHX4JQy8hPAMREJXBnckibJg+/wyE7AORvwKVGwoACTeiUq+64h7CUF0QKayqjCKE1aWZFgSNqQJAQLSxTAAciDXGF365NluL2I0vAAAAAElFTkSuQmCC"
+    alt=""
+  />
+</body>
+
+<style>
+  canvas {
+    background: green;
+  }
+</style>
+
+<script>
+  const canvasSize = 512;
+
+  document.body.innerHTML += `<canvas id="canvas" width="${canvasSize}" height="${canvasSize}"></canvas>`;
+
+  let img = document.querySelector("img");
+
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext("2d");
+
+  function subImage(image, left, top, width, height) {
+    let canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let context = canvas.getContext("2d");
+    context.drawImage(image, left, top, width, height, 0, 0, width, height);
+    return canvas;
+  }
+
+  function cutImageUp(
+    image,
+    numColsToCut,
+    numRowsToCut,
+    widthOfOnePiece,
+    heightOfOnePiece
+  ) {
+    let imagePieces = [];
+    for (let y = 0; y < numRowsToCut; y++) {
+      for (let x = 0; x < numColsToCut; x++) {
+        imagePieces.push(
+          subImage(
+            image,
+            x * widthOfOnePiece,
+            y * heightOfOnePiece,
+            widthOfOnePiece,
+            heightOfOnePiece
+          )
+        );
+      }
+    }
+    return imagePieces;
+  }
+
+  const partsOrder = [0, 1, 2, 3, 11, 12, 13, 4, 10, 14, 15, 5, 9, 8, 7, 6];
+
+  const neighborDelta = [
+    [-1, -1],
+    [0, -1],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [-1, 0],
+  ];
+
+  let seed = 1;
+  function random() {
+    let x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  const [gridHeight, gridWidth] = [30, 30];
+
+  let grid = [...Array(gridHeight)].map((v, y) =>
+    [...Array(gridWidth)].map((v, x) =>
+      x == 0 || y == 0 ? 0 : random() < 0.5 ? 1 : 0
+    )
+  );
+
+  img.onload = () => {
+    let partImages = cutImageUp(img, 4, 12, 8, 8);
+    let parts = [];
+
+    let allWater = subImage(img, 0, 64, 32, 32);
+    for (let x = 1; x < gridWidth - 1; x++)
+      for (let y = 1; y < gridHeight - 1; y++) {
+        if (grid[y][x]) {
+          for (let subi = 0; subi < 16; subi++) {
+            let imagei = subi;
+            let subSide = partsOrder[subi];
+            if (subSide < 12) {
+              let side = Math.floor(subSide / 2);
+              let neighbor2Side = (side + (subSide % 2 ? 1 : 5)) % 6;
+              let neighbor1 =
+                grid[y + neighborDelta[side][1]][x + neighborDelta[side][0]];
+              let neighbor2 =
+                grid[y + neighborDelta[neighbor2Side][1]][
+                  x + neighborDelta[neighbor2Side][0]
+                ];
+              let mode = neighbor1 ? 2 : neighbor2 ? 1 : 0;
+              imagei += mode * 16;
+            } else imagei += 32;
+            ctx.drawImage(
+              partImages[imagei],
+              x * 32 - y * 16 + (subi % 4) * 8,
+              y * 24 + Math.floor(subi / 4) * 8
+            );
+          }
+        }
+      }
+  };
+</script>

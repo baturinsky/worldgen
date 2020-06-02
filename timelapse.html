@@ -1,0 +1,45 @@
+<body></body>
+
+<script src="gif.js"></script>
+<script src="mapgen.js"></script>
+
+<script>
+  let config = {
+    seed: 1,
+    width: 600,
+    height: 600,
+    scale: 1,
+    erosion: 1,
+    pangaea: -1,
+    discreteHeights: 20,
+    riverAge: 20000,
+    riversNumber: 1000,
+    terrainTypeColoring: false,
+    seaRatio: 0.5,
+    hillRatio: 0.12,
+    mountainRatio: 0.04,
+  };
+
+  function timeLapse() {
+    config.riversNumber = 0;
+
+    let gif = new GIF({
+      quality: 10,
+    });
+
+    for (i = 0; i < 10; i++) {
+      config.riverAge = i*i * 500;
+      let { elevation, folds, temperature, rivers } = generateMap(config);
+      let elevationImage = elevation2Image({ elevation, rivers }, config);
+      gif.addFrame(elevationImage);
+    }
+
+    gif.on("finished", function (blob) {
+      document.body.innerHTML += `<img src="${URL.createObjectURL(blob)}"/>`;
+    });
+
+    gif.render();
+  }
+
+  timeLapse();
+</script>
