@@ -134,7 +134,7 @@ function generateMap({
   height,
   seed,
   seaRatio,
-  erosion,
+  biomeScrambling,
   pangaea,
   riverAge,
   riversShown,
@@ -184,20 +184,15 @@ function generateMap({
 
   elevation = normalizeValues(elevation);
   
-  let highest = approximateMedian(elevation, 0.99);
   let seaLevel = approximateMedian(elevation, seaRatio);
 
   elevation = elevation.map((v) =>
     v < seaLevel
       ? -Math.pow(1 - v / seaLevel, 0.4)
-      : (v - seaLevel) / (1 - seaLevel) / highest
+      : (v - seaLevel) / (1 - seaLevel)
   );
 
   console.timeEnd("normalize");
-
-  let temperature = elevation.map(
-    (v, i) => 50 - 110 * Math.abs(0.5 - i / mapSize) - Math.max(0, v) * 30
-  );
 
   let wind = elevation.map(
     (v, i) =>
@@ -216,6 +211,10 @@ function generateMap({
 
   let humidity = generateHumidity({ width, height, elevation, wind });
 
+  let temperature = elevation.map(
+    (v, i) => 50 - 110 * Math.abs(0.5 - i / mapSize) / (0.5 + humidity[i]) - Math.max(0, v) * 30
+  );
+
   if (randomiseHumidity) {
     humidity = humidity.map((v, i) =>
       Math.max(0, v + Math.sin(noise[i] * 50) / 10 - elevation[i] * 0.2)
@@ -233,7 +232,7 @@ function generateMap({
 
   let biome = temperature.map(
     (t, i) =>
-      biomeTable[Math.floor(Math.max(0, Math.min(humidity[i] * 4.5, 5)))][
+      biomeTable[Math.floor(Math.max(0, Math.min(humidity[i] * 4.5 * (1 + biomeScrambling * Math.sin(noise[i]*100)), 5)))][
         Math.floor(Math.max(0, Math.min(t / 10 + 1, 3)))
       ] || 0
   );
@@ -391,11 +390,11 @@ const DESERT = 1,
   RAIN_FOREST = 9,
   SWAMP = 10,
   SNOW = 11,
-  BARE = 12;
+  STEPPE = 12;
 
 // -> temperature V humidity
 const biomeTable = [
-  [BARE, SAVANNA, SAVANNA, DESERT],
+  [TUNDRA, SAVANNA, SAVANNA, DESERT],
   [TUNDRA, SAVANNA, GRASSLAND, GRASSLAND],
   [TUNDRA, SHRUBLAND, GRASSLAND, TEMPERATE_FOREST],
   [SNOW, SHRUBLAND, TEMPERATE_FOREST, TEMPERATE_FOREST],
@@ -416,7 +415,7 @@ const biomeNames = [
   "rain forest",
   "swamp",
   "snow",
-  "bare",
+  "steppe",
 ];
 
 function mapToList(m) {
@@ -444,7 +443,7 @@ const chartColors = mapToList({
   [RAIN_FOREST]: "075330",
   [SWAMP]: "2f6666",
   [SNOW]: "ffffff",
-  [BARE]: "808080",
+  [STEPPE]: "a0ffa0",
 }).map(colorFromRGBString);
 
 const redblobColors = mapToList({
@@ -459,7 +458,7 @@ const redblobColors = mapToList({
   [RAIN_FOREST]: "337755",
   [SWAMP]: "2f6666",
   [SNOW]: "ffffff",
-  [BARE]: "808080",
+  [STEPPE]: "808080",
 }).map(colorFromRGBString);
 
 const contrastColors = mapToList({
@@ -474,7 +473,7 @@ const contrastColors = mapToList({
   [RAIN_FOREST]: "00c080",
   [SWAMP]: "808000",
   [SNOW]: "ffffff",
-  [BARE]: "808080",
+  [STEPPE]: "c0ffa0",
 }).map(colorFromRGBString);
 
 /**
