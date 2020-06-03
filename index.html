@@ -200,7 +200,9 @@
     let generatedMap = generateMap(settings);
     let {
       elevation,
-      folds,
+      noise,
+      crust,
+      tectonic,
       rivers,
       wind,
       temperature,
@@ -248,7 +250,7 @@
       elevation2Image({ elevation, rivers }, settings)
     );
 
-    showMap(folds, "tectonics", (v, i) => [0, 0, 0, v * 255]);
+    showMap(tectonic, "tectonics", (v, i) => [0, 0, 0, v * 255]);
 
     showMap(temperature, "temperature", (v, i) => [
       v * 10 + 100,

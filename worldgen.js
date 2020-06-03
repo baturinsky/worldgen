@@ -154,7 +154,7 @@ function generateMap({
       "blur(2px)"
     )
   );
-  let tectonic = image2alpha(
+  let crust = image2alpha(
     addFilter(
       gradientNoise(width, height, 2000, mapDiagonal * 0.15, 0.03),
       "blur(5px)"
@@ -164,9 +164,9 @@ function generateMap({
 
   console.time("main");
 
-  let tectonicQuantile = approximateQuantile(tectonic, 0.5);
+  let tectonicQuantile = approximateQuantile(crust, 0.5);
 
-  let folds = tectonic.map(
+  let tectonic = crust.map(
     v => 1 / (1 + 5 * Math.atan(Math.abs(tectonicQuantile - v)))
   );
 
@@ -174,8 +174,8 @@ function generateMap({
     (_, i) =>
       5 +
       noise[i] * 10 +
-      tectonic[i] * 6 +
-      2.5 * folds[i] +
+      crust[i] * 6 +
+      2.5 * tectonic[i] +
       -pangaea *
         (Math.abs(i / mapSize - 0.5) + Math.abs((i % width) / width - 0.5))
   );
@@ -191,7 +191,7 @@ function generateMap({
   elevation = elevation.map((v,i) =>
     v < seaLevel
       ? -Math.pow(1 - v / seaLevel, 0.4)
-      : Math.pow((v - seaLevel) * (0.5 + folds[i]*0.5) / (1 - seaLevel), 1 + 2 * flatness)
+      : Math.pow((v - seaLevel) * (0.5 + tectonic[i]*0.5) / (1 - seaLevel), 1 + 2 * flatness)
   );
 
   //let beachLevel = Math.pow(0.05, 1 + 2 * flatness);
@@ -250,11 +250,12 @@ function generateMap({
 
   return {
     elevation,
-    folds,
+    noise,
+    crust,
+    tectonic,
     rivers,
     wind,
     noise,
-    tectonic,
     temperature,
     humidity,
     biome,
