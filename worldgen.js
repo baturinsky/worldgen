@@ -105,12 +105,12 @@ function addFilter(srcCanvas, filter) {
 }
 
 /**
- * Monte-Carlo approximation of the median
+ * Monte-Carlo approximation of the quantile
  * @param {number[]} values
  * @param {number} picks
  * @param {number} level
  */
-function approximateMedian(values, level = 0.5, picks = 1000) {
+function approximateQuantile(values, level = 0.5, picks = 1000) {
   let l = values.length;
   let picked = [...Array(picks)].map(() => values[Math.floor(random() * l)]);
   picked = picked.sort();
@@ -134,6 +134,7 @@ function generateMap({
   height,
   seed,
   seaRatio,
+  flatness, 
   biomeScrambling,
   pangaea,
   riverAge,
@@ -163,41 +164,44 @@ function generateMap({
 
   console.time("main");
 
-  let tectonicMedian = approximateMedian(tectonic, 0.5);
+  let tectonicQuantile = approximateQuantile(tectonic, 0.5);
 
   let folds = tectonic.map(
-    (v) => 1 / (1 + 5 * Math.atan(Math.abs(tectonicMedian - v)))
+    v => 1 / (1 + 5 * Math.atan(Math.abs(tectonicQuantile - v)))
   );
 
   let elevation = noise.map(
     (_, i) =>
       5 +
       noise[i] * 10 +
-      tectonic[i] * 5 +
-      3 * folds[i] +
+      tectonic[i] * 6 +
+      2.5 * folds[i] +
       -pangaea *
         (Math.abs(i / mapSize - 0.5) + Math.abs((i % width) / width - 0.5))
   );
+
   console.timeEnd("main");
 
   console.time("normalize");
 
   elevation = normalizeValues(elevation);
   
-  let seaLevel = approximateMedian(elevation, seaRatio);
+  let seaLevel = approximateQuantile(elevation, seaRatio);
 
-  elevation = elevation.map((v) =>
+  elevation = elevation.map((v,i) =>
     v < seaLevel
       ? -Math.pow(1 - v / seaLevel, 0.4)
-      : (v - seaLevel) / (1 - seaLevel)
+      : Math.pow((v - seaLevel) * (0.5 + folds[i]*0.5) / (1 - seaLevel), 1 + 2 * flatness)
   );
+
+  //let beachLevel = Math.pow(0.05, 1 + 2 * flatness);
 
   console.timeEnd("normalize");
 
   let wind = elevation.map(
-    (v, i) =>
+    (h, i) =>
       Math.cos((Math.abs(0.5 - i / mapSize) * 4 + 0.75) * Math.PI) /
-      (1 + 2 * Math.max(0, elevation[i]))
+      (1 + 10 * Math.pow(Math.max(0, h),2))
   );
 
   console.time("windSmoothing");
@@ -209,11 +213,15 @@ function generateMap({
   ).map((v) => v * 2 - 1);
   console.timeEnd("windSmoothing");
 
-  let humidity = generateHumidity({ width, height, elevation, wind });
+  let rivers = generateRivers({
+    width,
+    height,
+    elevation,
+    riverAge,
+    riversShown,
+  });
 
-  let temperature = elevation.map(
-    (v, i) => 50 - 110 * Math.abs(0.5 - i / mapSize) / (0.5 + humidity[i]) - Math.max(0, v) * 30
-  );
+  let humidity = generateHumidity({ width, height, elevation, wind });
 
   if (randomiseHumidity) {
     humidity = humidity.map((v, i) =>
@@ -221,20 +229,23 @@ function generateMap({
     );
   }
 
-  let rivers = generateRivers({
-    width,
-    height,
-    elevation,
-    humidity,
-    riverAge,
-    riversShown,
-  });
+  let temperature = elevation.map(
+    (v, i) => 60 - 140 * Math.abs(0.5 - i / mapSize) / (0.7 + 0.6*humidity[i]) - Math.max(0, v) * 50
+  );
 
   let biome = temperature.map(
-    (t, i) =>
+    (t, i) => {
+      let h = elevation[i];
+      /*if(t>5 && h<beachLevel)
+        return BEACH;*/
+      let b = 
       biomeTable[Math.floor(Math.max(0, Math.min(humidity[i] * 4.5 * (1 + biomeScrambling * Math.sin(noise[i]*100)), 5)))][
         Math.floor(Math.max(0, Math.min(t / 10 + 1, 3)))
       ] || 0
+      if(b==TUNDRA && h>0.5)
+        b = MOUNTAIN;
+      return b;      
+    }
   );
 
   return {
@@ -260,7 +271,7 @@ function generateHumidity({ width, height, elevation, wind }) {
     0,
     0,
     0,
-    v <= 0 ? 255 : 0,
+    v <= 0 ? 100 : 0,
   ]);
   let wetness = createCanvasCtx(width + border * 2, height + border * 2);
 
@@ -271,14 +282,14 @@ function generateHumidity({ width, height, elevation, wind }) {
 
   wetness.ctx.drawImage(humidityImage, width / 2, height / 2);
 
-  wetness.ctx.filter = "opacity(15%)";
+  wetness.ctx.filter = "opacity(20%)";
   const spotSize = mapDiagonal / 10;
   for (let i = 0; i < 1000; i++) {
     let end = [random() * width, random() * height];
     let endWind = wind[coord2ind(end, width)];
     let start = [
-      end[0] + (endWind * (random() - 0.2) * width) / 4,
-      end[1] + (Math.abs(endWind) * (random() - 0.5) * width) / 16,
+      end[0] + (endWind * (random() - 0.2) * width) / 6,
+      end[1] + (Math.abs(endWind) * (random() - 0.5) * height) / 16,
     ];
     wetness.ctx.drawImage(
       wetness.canvas,
@@ -342,7 +353,10 @@ function generateRivers({
     streamIndex++
   ) {
     let current = Math.floor(random() * width * height);
-    if (humidity[current] < random()) continue;
+    if(elevation[current]<random()*0.4)
+      continue;
+
+    if (humidity && humidity[current] < random()) continue;
 
     let limit = 10000;
 
@@ -390,16 +404,19 @@ const DESERT = 1,
   RAIN_FOREST = 9,
   SWAMP = 10,
   SNOW = 11,
-  STEPPE = 12;
+  STEPPE = 12,
+  CONIFEROUS_FOREST = 13,
+  MOUNTAIN = 14,
+  BEACH = 15;
 
 // -> temperature V humidity
 const biomeTable = [
   [TUNDRA, SAVANNA, SAVANNA, DESERT],
-  [TUNDRA, SAVANNA, GRASSLAND, GRASSLAND],
-  [TUNDRA, SHRUBLAND, GRASSLAND, TEMPERATE_FOREST],
-  [SNOW, SHRUBLAND, TEMPERATE_FOREST, TEMPERATE_FOREST],
-  [SNOW, TAIGA, DENSE_FOREST, DENSE_FOREST],
-  [SNOW, TAIGA, RAIN_FOREST, RAIN_FOREST],
+  [TUNDRA, SHRUBLAND, GRASSLAND, GRASSLAND],
+  [SNOW, SHRUBLAND, GRASSLAND, TEMPERATE_FOREST],
+  [SNOW, CONIFEROUS_FOREST, TEMPERATE_FOREST, TEMPERATE_FOREST],
+  [TAIGA, CONIFEROUS_FOREST, DENSE_FOREST, DENSE_FOREST],
+  [TAIGA, CONIFEROUS_FOREST, DENSE_FOREST, RAIN_FOREST],
 ];
 
 const biomeNames = [
@@ -416,6 +433,9 @@ const biomeNames = [
   "swamp",
   "snow",
   "steppe",
+  "coniferous forest",
+  "mountain shrubland",
+  "beach"
 ];
 
 function mapToList(m) {
@@ -466,14 +486,17 @@ const contrastColors = mapToList({
   [GRASSLAND]: "40ff40",
   [TUNDRA]: "c0c0a0",
   [SAVANNA]: "c0c000",
-  [SHRUBLAND]: "80c040",
-  [TAIGA]: "008080",
+  [SHRUBLAND]: "a0d040",
+  [TAIGA]: "006080",
   [DENSE_FOREST]: "008000",
   [TEMPERATE_FOREST]: "40a040",
-  [RAIN_FOREST]: "00c080",
+  [RAIN_FOREST]: "006020",
   [SWAMP]: "808000",
   [SNOW]: "ffffff",
   [STEPPE]: "c0ffa0",
+  [CONIFEROUS_FOREST]: "008080",
+  [MOUNTAIN]: "c080c0",
+  [BEACH]: "ffff80",
 }).map(colorFromRGBString);
 
 /**
@@ -507,8 +530,8 @@ function elevation2Image(
     mountainRatio = 0.02,
   }
 ) {
-  let hillElevation = approximateMedian(elevation, 1 - hillRatio);
-  let mountainElevation = approximateMedian(elevation, 1 - mountainRatio);
+  let hillElevation = approximateQuantile(elevation, 1 - hillRatio);
+  let mountainElevation = approximateQuantile(elevation, 1 - mountainRatio);
 
   console.log("hill", hillElevation);
   console.log("mountain", mountainElevation);

@@ -8,6 +8,12 @@
     width: 5em;
     grid-column: span 2;
   }
+  .tip{
+    grid-column: span 3;
+    font-style: italic;
+    text-align: center;
+  }
+
   .range {
     width: 25em;
   }
@@ -38,6 +44,7 @@
   #tooltip div:nth-child(odd) {
     text-align: right;
   }
+
 </style>
 
 <body>
@@ -66,9 +73,11 @@
     ["scale", "range", { max: 10 }],
     ["pangaea", "range", { min: -5, max: 5 }],
     ["seaRatio", "range"],
+    ["flatness", "range"],
     ["riverAge", "range", { max: 100000 }],
     ["riversShown", "range", { max: 1000 }],
     ["biomeScrambling", "range"],
+    ["Graphical repesenation settings", "tip"],
     ["discreteHeights", "range", { max: 40 }],
     ["terrainTypeColoring", "checkbox"],
     ["hillRatio", "range", { max: 0.3 }],
@@ -90,6 +99,7 @@
     terrainTypeColoring: false,
     biomeScrambling: 0,
     seaRatio: 0.55,
+    flatness: 0.5,
     hillRatio: 0.12,
     mountainRatio: 0.04,
   });
@@ -110,6 +120,9 @@
       let [id, type, also] = param;
       also = also || {};
       switch (type) {
+        case "tip":
+          form.innerHTML += `<div class="tip">${id}</div>`;
+          break;
         case "checkbox":
           form.innerHTML += `<div>${id}</div><input class="checkbox" type="checkbox" id="${id}" ${
             settings[id] ? "checked" : ""
@@ -139,7 +152,9 @@
   }
 
   function applySettings() {
-    for (let [id] of parameters) {
+    for (let [id,type] of parameters) {
+      if(type=="tip")
+        continue;
       let element = document.getElementById(id);
       settings[id] =
         element.type == "checkbox" ? element.checked : Number(element.value);
