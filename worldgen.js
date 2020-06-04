@@ -264,8 +264,9 @@ function generateMap({
   let photo = [...humidity].map((w, i) =>
     elevation[i] < 0
       ? [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255]
-      : [255 - w * 400, 200 - w * 100 - w * noise[i] * 100, 150 - w * 200]
-          .map((v) => v - elevation[i] * 120 + Math.atan(((elevation[i-width]||0) - 1 * elevation[i])*100) * -25)
+      : [300 - w * 500, 200 - w * 150, 150 - w * 200]
+          .map((v) => Math.min(255, v + Math.max(0, -50 - temperature[i]*20)) - elevation[i] * 120 + ( Math.atan(((elevation[i+width]||0) 
+          - 1 * elevation[i])*100) + 2) * 20)
           .concat([255])
   );
 
