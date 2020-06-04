@@ -234,15 +234,16 @@ function generateMap({
 
   let temperature = elevation.map(
     (v, i) =>
-      60 -
-      (140 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
+      50 -
+      (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
       Math.max(0, v) * 50
   );
 
+  humidity = humidity.map((w, i) => w + Math.atan(-temperature[i] / 100));
+
+  console.time("biome");
   let biome = temperature.map((t, i) => {
     let h = elevation[i];
-    /*if(t>5 && h<beachLevel)
-        return BEACH;*/
     let b =
       biomeTable[
         Math.floor(
@@ -260,17 +261,31 @@ function generateMap({
     if (b == TUNDRA && h > 0.5) b = MOUNTAIN;
     return b;
   });
+  console.timeEnd("biome");
 
-  let photo = [...humidity].map((w, i) =>
-    elevation[i] < 0
-      ? [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255]
-      : [300 - w * 500, 200 - w * 150, 150 - w * 200]
-          .map((v) => Math.min(255, v + Math.max(0, -50 - temperature[i]*20)) - elevation[i] * 120 + ( Math.atan(((elevation[i+width]||0) 
-          - 1 * elevation[i])*100) + 2) * 20)
-          .concat([255])
-  );
-
-  console.log(photo);
+  console.time("photo");
+  let photo = [...humidity].map((w, i) => {
+    if (elevation[i] < 0)
+      return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
+    else
+      return [
+        100 - w * 600 + temperature[i] * 5,
+        200 - w * 200,
+        130 - w * 300,
+      ]
+        .map(
+          (v) =>
+            (temperature[i] < 0 ? 255 : v) +
+            -elevation[i] * 140 +
+            25 *
+              (2 +
+                Math.atan(
+                  ((elevation[i + width] || 0) - 1 * elevation[i]) * 120
+                ))
+        )
+        .concat([255]);
+  });
+  console.timeEnd("photo");
 
   return {
     elevation,
@@ -436,7 +451,7 @@ const DESERT = 1,
 
 // -> temperature V humidity
 const biomeTable = [
-  [TUNDRA, SAVANNA, SAVANNA, DESERT],
+  [TUNDRA, STEPPE, SAVANNA, DESERT],
   [TUNDRA, SHRUBLAND, GRASSLAND, GRASSLAND],
   [SNOW, SHRUBLAND, GRASSLAND, TEMPERATE_FOREST],
   [SNOW, CONIFEROUS_FOREST, TEMPERATE_FOREST, TEMPERATE_FOREST],
@@ -559,18 +574,22 @@ function elevation2Image(
   };
 }
 
-function heightMap2HexGrid({ values, width }, scale = 16) {
-  let result = [];
+function rescale(values, width, scale = 16, hex = false) {
+  let height = values.length / width;
+  let verticalScale = hex ? scale * 0.75 : scale;
+  let rows = Math.floor(width / scale);
+  let columns = Math.floor(height / verticalScale);
 
-  for (let i = 0; i < values.length; i++) {
-    let canvasX = i % width;
-    let canvasY = Math.floor(i / width);
+  let result = new Float32Array(rows * columns);
 
-    let gridY = Math.floor(canvasY / (scale * 0.75));
-    let gridX = Math.floor(canvasX / scale + gridY / 2);
-
-    let alpha = values[i];
-    result[gridY * gridWidth + gridX] = alpha;
+  for (let row = 0; row < rows; row++) {
+    let y = Math.floor(row * verticalScale);
+    let startX = hex & row % 2 ? scale / 2 : 0;
+    for (let column = 0; column < columns; column++) {
+      let x = Math.floor(startX + column * scale);
+      let value = values[y * width + x];
+      result[rows * columns + column] = value;
+    }
   }
 
   return result;
