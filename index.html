@@ -8,7 +8,7 @@
     width: 5em;
     grid-column: span 2;
   }
-  .tip{
+  .tip {
     grid-column: span 3;
     font-style: italic;
     text-align: center;
@@ -44,7 +44,6 @@
   #tooltip div:nth-child(odd) {
     text-align: right;
   }
-
 </style>
 
 <body>
@@ -152,9 +151,8 @@
   }
 
   function applySettings() {
-    for (let [id,type] of parameters) {
-      if(type=="tip")
-        continue;
+    for (let [id, type] of parameters) {
+      if (type == "tip") continue;
       let element = document.getElementById(id);
       settings[id] =
         element.type == "checkbox" ? element.checked : Number(element.value);
@@ -208,6 +206,7 @@
       temperature,
       humidity,
       biome,
+      photo,
     } = generatedMap;
 
     console.timeEnd("generation");
@@ -228,11 +227,13 @@
         tooltip.innerHTML = Object.keys(generatedMap)
           .map(
             (key) =>
-              `<div>${key}</div><div>${
-                key == "biome"
-                  ? biomeNames[generatedMap[key][ind]].toUpperCase()
-                  : generatedMap[key][ind]
-              }</div>`
+              (key == "photo"
+                ? ""
+                : `<div>${key}</div><div>${
+                    key == "biome"
+                      ? biomeNames[generatedMap[key][ind]].toUpperCase()
+                      : generatedMap[key][ind]
+                  }</div>`)
           )
           .join("");
       }
@@ -274,6 +275,8 @@
     showMap(biome, "biome", (v, i) =>
       elevation[i] < 0 || rivers[i] ? [0, 40, 80, 255] : contrastColors[v]
     );
+
+    showMap(photo, "photo", (v, i) => v);
 
     console.timeEnd("draw");
   }

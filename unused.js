@@ -47,3 +47,33 @@ function erode(){
     v > 0 ? (v * (1 + folds[i] * erosion)) / (1 + erosion) : v
   );
 }
+
+const chartColors = mapToList({
+  [DESERT]: "C87137",
+  [GRASSLAND]: "927E30",
+  [TUNDRA]: "93A7AC",
+  [SAVANNA]: "97A527",
+  [SHRUBLAND]: "B37C06",
+  [TAIGA]: "5B8F52",
+  [DENSE_FOREST]: "2C89A0",
+  [TEMPERATE_FOREST]: "0A546D",
+  [RAIN_FOREST]: "075330",
+  [SWAMP]: "2f6666",
+  [SNOW]: "ffffff",
+  [STEPPE]: "a0ffa0",
+}).map(colorFromRGBString);
+
+const redblobColors = mapToList({
+  [DESERT]: "a09077",
+  [GRASSLAND]: "88aa55",
+  [TUNDRA]: "ffffff",
+  [SAVANNA]: "c9d29b",
+  [SHRUBLAND]: "889977",
+  [TAIGA]: "99aa77",
+  [DENSE_FOREST]: "559944",
+  [TEMPERATE_FOREST]: "679459",
+  [RAIN_FOREST]: "337755",
+  [SWAMP]: "2f6666",
+  [SNOW]: "ffffff",
+  [STEPPE]: "808080",
+}).map(colorFromRGBString);
