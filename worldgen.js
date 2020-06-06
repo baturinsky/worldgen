@@ -17,26 +17,23 @@ function coord2ind([x, y], width) {
 }
 
 /**
- * @param {number} width
- * @param {number} height
- * @returns {{canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D}}
- */
-
-function createCanvasCtx(width, height) {
-  /** @type {HTMLCanvasElement} */
-  let canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  /** @type {CanvasRenderingContext2D} */
-  let ctx = canvas.getContext("2d");
-  return { canvas, ctx };
-}
-
-/**
  * @returns {CanvasRenderingContext2D}
  */
 function context2d(canvas) {
   return canvas.getContext("2d");
+}
+
+/**
+ * @param {number} width
+ * @param {number} height
+ * @returns {{canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D}}
+ */
+function createCanvasCtx(width, height) {
+  let canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  let ctx = context2d(canvas);
+  return { canvas, ctx };
 }
 
 /**
@@ -135,6 +132,7 @@ function generateMap({
   seed,
   seaRatio,
   flatness,
+  averageTemperature,
   biomeScrambling,
   pangaea,
   riverAge,
@@ -197,8 +195,6 @@ function generateMap({
         )
   );
 
-  //let beachLevel = Math.pow(0.05, 1 + 2 * flatness);
-
   console.timeEnd("normalize");
 
   let wind = elevation.map(
@@ -234,7 +230,8 @@ function generateMap({
 
   let temperature = elevation.map(
     (v, i) =>
-      50 -
+      averageTemperature +
+      35 -
       (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
       Math.max(0, v) * 50
   );
@@ -268,11 +265,7 @@ function generateMap({
     if (elevation[i] < 0)
       return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
     else
-      return [
-        100 - w * 600 + temperature[i] * 5,
-        200 - w * 200,
-        130 - w * 300,
-      ]
+      return [100 - w * 600 + temperature[i] * 5, 200 - w * 200, 130 - w * 300]
         .map(
           (v) =>
             (temperature[i] < 0 ? 255 : v) +
@@ -280,7 +273,7 @@ function generateMap({
             25 *
               (2 +
                 Math.atan(
-                  ((elevation[i + width] || 0) - 1 * elevation[i]) * 120
+                  ((elevation[i - width] || 0) - 1 * elevation[i]) * 120
                 ))
         )
         .concat([255]);
@@ -574,29 +567,32 @@ function elevation2Image(
   };
 }
 
-function rescale(values, width, scale = 16, hex = false) {
-  let height = values.length / width;
+function rescaleCoordinates(width, height, scale, hex) {
   let verticalScale = hex ? scale * 0.75 : scale;
-  let rows = Math.floor(width / scale);
-  let columns = Math.floor(height / verticalScale);
+  let columns = Math.floor(width / scale);
+  let rows = Math.floor(height / verticalScale);
 
-  let result = new Float32Array(rows * columns);
+  let result = new Array(rows * columns);
 
   for (let row = 0; row < rows; row++) {
-    let y = Math.floor(row * verticalScale);
-    let startX = hex & row % 2 ? scale / 2 : 0;
+    let y = Math.floor((row + 0.5) * verticalScale);
+    let startX = (scale * 0.5 + hex) & row % 2 ? scale / 2 : 0;
     for (let column = 0; column < columns; column++) {
       let x = Math.floor(startX + column * scale);
-      let value = values[y * width + x];
-      result[rows * columns + column] = value;
+      result[row * columns + column] = y * width + x;
     }
   }
-
   return result;
 }
 
 function rescaleImage(source, width, height) {
   let { canvas, ctx } = createCanvasCtx(width, height);
   ctx.drawImage(source, 0, 0, source.width, source.height, 0, 0, width, height);
+  return canvas;
+}
+
+function subImage(image, left, top, width, height) {
+  let { canvas, ctx } = createCanvasCtx(width, height);
+  ctx.drawImage(image, left, top, width, height, 0, 0, width, height);
   return canvas;
 }

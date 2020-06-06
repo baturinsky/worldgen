@@ -44,10 +44,16 @@
   #tooltip div:nth-child(odd) {
     text-align: right;
   }
+
+  #tilesheet {
+    display: none;
+  }
 </style>
 
 <body>
+  <img id="tilesheet" src="tilesets/hexSheet2.png" />
   <div id="tooltip">tooltip</div>
+  w
   <div class="all">
     <div>
       <form id="form" onchange="applySettings()"></form>
@@ -58,11 +64,15 @@
       <div id="minimaps"></div>
     </div>
   </div>
+  <canvas id="hexmap" />
 </body>
 
 <script src="worldgen.js"></script>
+<script src="hexdraw.js"></script>
 
 <script>
+  "use strict";
+
   let mouseOffset = [0, 0];
 
   const parameters = [
@@ -73,6 +83,7 @@
     ["pangaea", "range", { min: -5, max: 5 }],
     ["seaRatio", "range"],
     ["flatness", "range"],
+    ["averageTemperature", "range", { min: -30, max: 50 }],
     ["riverAge", "range", { max: 100000 }],
     ["riversShown", "range", { max: 1000 }],
     ["biomeScrambling", "range"],
@@ -81,6 +92,7 @@
     ["terrainTypeColoring", "checkbox"],
     ["hillRatio", "range", { max: 0.3 }],
     ["mountainRatio", "range", { max: 0.3 }],
+    ["hexMapScale", "range", { min: 0, max: 4, step:1 }],
   ];
 
   let miniMapSize = 200;
@@ -92,15 +104,17 @@
     height: 600,
     scale: 1,
     pangaea: 0,
-    discreteHeights: 0,
-    riverAge: 50000,
-    riversShown: 400,
-    terrainTypeColoring: false,
-    biomeScrambling: 0,
     seaRatio: 0.55,
     flatness: 0.5,
+    averageTemperature: 15,
+    riverAge: 50000,
+    riversShown: 400,
+    biomeScrambling: 0,
+    terrainTypeColoring: false,
+    discreteHeights: 0,
     hillRatio: 0.12,
     mountainRatio: 0.04,
+    hexMapScale: false,
   });
 
   let settings = {};
@@ -225,15 +239,14 @@
         let localY = (e.offsetY / target.height) * settings.height;
         let ind = Math.floor(localX) + Math.floor(localY) * settings.width;
         tooltip.innerHTML = Object.keys(generatedMap)
-          .map(
-            (key) =>
-              (key == "photo"
-                ? ""
-                : `<div>${key}</div><div>${
-                    key == "biome"
-                      ? biomeNames[generatedMap[key][ind]].toUpperCase()
-                      : generatedMap[key][ind]
-                  }</div>`)
+          .map((key) =>
+            key == "photo"
+              ? ""
+              : `<div>${key}</div><div>${
+                  key == "biome"
+                    ? biomeNames[generatedMap[key][ind]].toUpperCase()
+                    : generatedMap[key][ind]
+                }</div>`
           )
           .join("");
       }
@@ -277,6 +290,98 @@
     );
 
     showMap(photo, "photo", (v, i) => v);
+
+    const WATER = 1,
+      ROAD = 2,
+      BRIDGE = 3,
+      HILLROAD = 4,
+      DESERT = 5,
+      GRASS = 6,
+      SNOW = 7,
+      HILL = 20,
+      CITY = 21,
+      DIRTHILL = 22,
+      MOUNTAIN = 23,
+      FOREST = 24,
+      LIGHTFOREST = 25,
+      GRASS1 = 26,
+      SNOWHILL = 27,
+      DESERTHILL = 28;
+
+    let tileset = {
+      tilesSize: 32,
+      connected: [
+        [WATER, 0, 0],
+        [ROAD, 1, 0],
+        [DESERT, 2, 3],
+        [GRASS, 4, 0],
+        [BRIDGE, 5, 0],
+        [SNOW, 5, 3],
+        [HILLROAD, 6, 0],
+      ],
+      single: [
+        [HILL, 3, 1],
+        [CITY, 4, 5],
+        [DIRTHILL, 3, 5],
+        [SNOWHILL, 3, 6],
+        [DESERTHILL, 3, 7],
+        [MOUNTAIN, 4, 4],
+        [FOREST, 3, 3],
+        [LIGHTFOREST, 3, 4],
+        [GRASS1, 4, 3],
+      ],
+      tilesheet: document.getElementById("tilesheet"),
+    };
+
+    let hexmapCanvas = document.getElementById("hexmap");
+
+    if (settings.hexMapScale) {
+      let hexCoords = rescaleCoordinates(
+        settings.height,
+        settings.width,
+        32 / settings.hexMapScale,
+        true
+      );
+
+      hexmapCanvas.width = settings.width * settings.hexMapScale;
+      hexmapCanvas.height = settings.height * settings.hexMapScale;
+
+      hexmapCanvas.style = `display:block;width:${
+        hexmapCanvas.width
+      }px;height:${hexmapCanvas.height}px;`;
+
+      let rescale = hexCoords.map((i) => {
+        let tile = [GRASS1];
+        let [e, h, t] = [elevation[i], humidity[i], temperature[i]];
+        let cover = 0;
+        if (t < 0) cover = SNOW;
+        else if (h < 0.4 && t > 30) cover = DESERT;
+
+        if (cover) tile.push(cover);
+
+        if (e > 0 && tectonic[i] > 0.9) {
+          if (e > 0.3) tile.push(MOUNTAIN);
+          else
+            tile.push(
+              cover == DESERT ? DESERTHILL : cover == SNOW ? SNOWHILL : HILL
+            );
+        } else {
+          if (!cover && h > 0.45 && e > 0) tile.push(FOREST);
+        }
+
+        if (e < 0) tile.push(WATER);
+        return tile;
+      });
+
+      drawTerrain(
+        hexmapCanvas.getContext("2d"),
+        rescale,
+        Math.floor(settings.width / 32 * settings.hexMapScale),
+        tileset
+      );
+    } else {
+      hexmapCanvas.style = `display:none;`;
+    }
 
     console.timeEnd("draw");
   }
