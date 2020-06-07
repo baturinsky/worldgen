@@ -91,15 +91,15 @@ function ind2xy(xy, columns) {
   return [x, y];
 }
 
-function screenPos(ind, columns, hexWidth, hexHeight = 0) {
+function screenPos(ind, columns, hexWidth, axial, hexHeight = 0) {
   let [x, y] = ind2xy(ind, columns);
-  return [(x + (y % 2) * 0.5) * hexWidth, y * (hexHeight || hexWidth * 0.75)];
+  return [(x + (axial?-y*0.5:(y % 2) * 0.5)) * hexWidth, y * (hexHeight || hexWidth * 0.75)];
 }
 
 /**
  * Returns the list of relative indices of neighbors for even and odd lines in clockwork order.
  */
-function createNeighborDeltas(width, axial = false) {
+function createNeighborDeltas(width, axial) {
   if (axial) {
     let r = [
       [0, -1],
@@ -132,14 +132,14 @@ function createNeighborDeltas(width, axial = false) {
   }
 }
 
-function drawTile(ctx, tile, ind, columns, neighborDeltas, connect) {
+function drawTile(ctx, tile, ind, columns, axial, neighborDeltas, connect) {
   if (!neighborDeltas) {
-    let [tileX, tileY] = screenPos(ind, columns, tile.width);
+    let [tileX, tileY] = screenPos(ind, columns, tile.width, axial);
     ctx.drawImage(tile, tileX, tileY);
     return;
   }
   if (!connect(ind)) return;
-  let [tileX, tileY] = screenPos(ind, columns, tile[0].width);
+  let [tileX, tileY] = screenPos(ind, columns, tile[0].width, axial);
   let y = Math.floor(ind / columns);
   let deltas = neighborDeltas[y % 2];
   for (let subi = 0; subi < 12; subi++) {
@@ -154,8 +154,8 @@ function drawTile(ctx, tile, ind, columns, neighborDeltas, connect) {
   }
 }
 
-function drawTerrain(ctx, grid, columns, tileset) {
-  let neighborDeltas = createNeighborDeltas(columns);
+function drawTerrain(ctx, grid, columns, tileset, axial) {
+  let neighborDeltas = createNeighborDeltas(columns, axial);
   let tileSize = tileset.tilesSize;
   let rows = grid.length / columns;
   
@@ -195,10 +195,11 @@ function drawTerrain(ctx, grid, columns, tileset) {
           tiles[tile],
           ind,
           columns,
-          neighborDeltas,
+          axial,
+          neighborDeltas,          
           (neighbor) => bits[neighbor] & (1 << tile)
         );
-      else drawTile(ctx, tiles[tile], ind, columns);
+      else drawTile(ctx, tiles[tile], ind, columns, axial);
     }
   }
 }

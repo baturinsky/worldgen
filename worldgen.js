@@ -8,7 +8,7 @@ function random() {
   return x - Math.floor(x);
 }
 
-function spread(range){
+function spread(range) {
   return range * (random() - 0.5);
 }
 
@@ -223,7 +223,7 @@ function generateMap({
   ).map((v) => v * 2 - 1);
   console.timeEnd("windSmoothing");
 
-  let rivers = generateRivers({
+  let rivers = generateRiversAndErosion({
     width,
     height,
     elevation,
@@ -369,7 +369,7 @@ function generateHumidity({ width, height, elevation, wind }) {
   return humidity;
 }
 
-function generateRivers({
+function generateRiversAndErosion({
   width,
   height,
   elevation,
@@ -580,21 +580,30 @@ function elevation2Image(
 
 /**
  * Returns indices of the elementsthat lie on a different resolution grid
- * @param {number} width 
- * @param {number} height 
+ * @param {number} width
+ * @param {number} height
  * @param {number} scale - how lower new resolution is
- * @param {boolean} hex - if true, returns a hex grid with even rows shifted 0.5 right and rows height being 0.75 of columns width
+ * @param {number} geometry - 0 for square grid,
+ * 1 returns a hex grid with even rows shifted 0.5 right and rows height being 0.75 of columns width,
+ * 2 returns a hex grid with row shifted left by 0.5 more with each row
  */
-function rescaleCoordinates(width, height, scale, hex) {
-  let verticalScale = hex ? scale * 0.75 : scale;
-  let columns = Math.floor(width / scale);
+function rescaleCoordinates(width, height, scale, geometry) {
+  let verticalScale = geometry == 0 ? scale : scale * 0.75;
+  let columns = Math.floor(width / scale) * (geometry == 2 ? 2 : 1);
   let rows = Math.floor(height / verticalScale);
 
   let result = new Array(rows * columns);
 
   for (let row = 0; row < rows; row++) {
     let y = Math.floor((row + 0.5) * verticalScale);
-    let startX = (scale * 0.5 + hex) & row % 2 ? scale / 2 : 0;
+    let startX =
+      geometry == 0
+        ? 1
+        : geometry == 1
+        ? row % 2 == 1
+          ? scale / 2
+          : 0
+        : -scale * 0.5 * row;
     for (let column = 0; column < columns; column++) {
       let x = Math.floor(startX + column * scale);
       result[row * columns + column] = y * width + x;
@@ -605,9 +614,9 @@ function rescaleCoordinates(width, height, scale, hex) {
 
 /**
  * Returns canvas rescaled to the new size
- * @param {HTMLCanvasElement} source 
+ * @param {HTMLCanvasElement} source
  * @param {number} width
- * @param {number} height 
+ * @param {number} height
  * @returns {HTMLCanvasElement}
  */
 function rescaleImage(source, width, height) {
@@ -618,14 +627,45 @@ function rescaleImage(source, width, height) {
 
 /**
  * Returns canvas that is a fragment of the source canvas
- * @param {HTMLCanvasElement} image 
- * @param {number} left 
- * @param {number} top 
- * @param {number} width 
- * @param {number} height 
+ * @param {HTMLCanvasElement} image
+ * @param {number} left
+ * @param {number} top
+ * @param {number} width
+ * @param {number} height
  */
 function subImage(image, left, top, width, height) {
   let { canvas, ctx } = createCanvasCtx(width, height);
   ctx.drawImage(image, left, top, width, height, 0, 0, width, height);
   return canvas;
+}
+
+/**
+ * Returns a matrix of rivers sizes per cell
+ * @param {number[]} heights
+ * @param {number[]} neighborDeltas
+ * @returns {number[]}
+ */
+function generateCompleteRivers(heights, probability, attempts, neighborDeltas) {
+  let hlen = heights.length;
+  let fat = 0;
+  let flow = new Int32Array(100);
+  let rivers = new Int32Array(hlen);
+  for (let riveri = 0; riveri < attempts; riveri++) {
+    let at = Math.floor(random() * hlen);
+    if (heights[at] <= 0 || probability[at] < random()) continue;
+    fat = 0;
+    while (heights[at] > 0 && fat < 100) {
+      let lowestNeighborDelta = neighborDeltas.reduce((a, b) =>
+        heights[at + a] - rivers[at + a] < heights[at + b] - rivers[at + b] ? a : b
+      );
+      if (heights[at + lowestNeighborDelta] >= heights[at]) break;
+      at = at + lowestNeighborDelta;
+      flow[fat++] = at;
+    }
+    if (fat > 2 && heights[at] <= 0) {
+      for (let i = 0; i < fat; i++) rivers[flow[i]]++;
+    }
+  }
+  console.log(rivers);
+  return rivers;
 }
