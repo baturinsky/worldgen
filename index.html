@@ -31,6 +31,7 @@
   }
   #tooltip {
     position: absolute;
+    display: none;
     grid-template-columns: 0fr 1fr;
     background: rgba(255, 255, 255, 0.6);
     padding: 1em;
@@ -53,7 +54,8 @@
 <body>
   <img id="tilesheet" src="tilesets/hexSheet2.png" />
   <div id="tooltip">tooltip</div>
-  Worldgen by <a href="https://twitter.com/baturinsky">Alexander Petrov</a> - <a href="https://github.com/baturinsky/worldgen">source at github</a>
+  Worldgen by <a href="https://twitter.com/baturinsky">Alexander Petrov</a> -
+  <a href="https://github.com/baturinsky/worldgen">source at github</a>
   <div class="all">
     <div>
       <form id="form" onchange="applySettings()"></form>
@@ -91,6 +93,7 @@
     ["averageTemperature", "range", { min: -30, max: 50, step: 1 }],
     ["riverAge", "range", { max: 100000 }],
     ["riversShown", "range", { max: 1000 }],
+    ["hexMapRivers", "range", { max: 50000, step: 1000 }],
     ["biomeScrambling", "range"],
     ["Graphical repesenation settings", "tip"],
     ["discreteHeights", "range", { max: 40 }],
@@ -119,15 +122,16 @@
     averageTemperature: 15,
     riverAge: 50000,
     riversShown: 400,
+    hexMapRivers: 15000,
     biomeScrambling: 0,
     terrainTypeColoring: false,
     discreteHeights: 0,
     hillRatio: 0.12,
     mountainRatio: 0.04,
-    hexMapScale: false,
+    hexMapScale: 0,
   });
 
-  let settings = {};
+  let settings = null;
 
   function resetSettings() {
     settings = JSON.parse(defaultSettings);
@@ -166,11 +170,28 @@
     }
   }
 
-  settings = JSON.parse(localStorage.mapGenSettings || defaultSettings);
+  if (document.location.hash) {
+    settings = {};
+    for (let ss of document.location.hash
+      .substr(1)
+      .split("&")
+      .map((s) => s.split("="))) {
+      settings[ss[0]] = ss[1] == "false" ? false : Number(ss[1]);
+    }
+
+    console.log(settings);
+  }
+
+  if (!settings || settings.width == 0)
+    settings = JSON.parse(localStorage.mapGenSettings || defaultSettings);
 
   rebuildForm();
 
   function saveSettings() {
+    document.location.hash = Object.keys(settings)
+      .map((k) => `${k}=${settings[k]}`)
+      .join("&");
+
     localStorage.mapGenSettings = JSON.stringify(settings);
   }
 
@@ -301,52 +322,6 @@
 
     showMap(photo, "photo", (v, i) => v);
 
-    const WATER = 1,
-      ROAD = 2,
-      BRIDGE = 3,
-      HILLROAD = 4,
-      DESERT = 5,
-      GRASS = 6,
-      SNOW = 7,
-      RIVER = 8,
-      DIRT = 9,
-      HILL = 30,
-      CITY = 31,
-      DIRTHILL = 32,
-      MOUNTAIN = 33,
-      FOREST = 34,
-      LIGHTFOREST = 35,
-      GRASS1 = 36,
-      SNOWHILL = 37,
-      DESERTHILL = 38;
-
-    let tileset = {
-      tilesSize: 32,
-      connected: [
-        [WATER, 0, 0],
-        [ROAD, 1, 0],
-        [DESERT, 2, 3],
-        [DIRT, 2, 0],
-        [GRASS, 4, 0],
-        [BRIDGE, 5, 0],
-        [SNOW, 5, 3],
-        [HILLROAD, 6, 0],
-        [RIVER, 6, 3],
-      ],
-      single: [
-        [HILL, 3, 1],
-        [CITY, 4, 5],
-        [DIRTHILL, 3, 5],
-        [SNOWHILL, 3, 6],
-        [DESERTHILL, 3, 7],
-        [MOUNTAIN, 4, 4],
-        [FOREST, 3, 3],
-        [LIGHTFOREST, 3, 4],
-        [GRASS1, 4, 3],
-      ],
-      tilesheet: document.getElementById("tilesheet"),
-    };
-
     let hexmapCanvas = document.getElementById("hexmap");
 
     if (settings.hexMapScale) {
@@ -367,58 +342,252 @@
 
       randomSeed = settings.seed;
 
-      let rivers = generateCompleteRivers(
+      let { riverDepth, flowsTo } = generatePrettyRivers(
         hexCoords.map((i) => elevation[i]),
-        hexCoords.map((i) => humidity[i]),
-        15000,
-        createNeighborDeltas(columns, true)[0]
+        hexCoords.map((i) => Math.max(humidity[i], elevation[i])),
+        settings.hexMapRivers,
+        createNeighborDeltas(columns, AXIAL)[0]
       );
 
-      let rescale = hexCoords.map((i, hexi) => {
-        let tile = [GRASS1];
+      const WATER = 1,
+        ROAD = 2,
+        BRIDGE = 3,
+        HILLROAD = 4,
+        DESERT = 5,
+        GRASS = 6,
+        SNOW = 7,
+        RIVER = 8,
+        DIRT = 9,
+        STEPPE = 10,
+        RIVERDELTA = 11,
+        HILL = 30,
+        CITY = 31,
+        DIRTHILL = 32,
+        MOUNTAIN = 33,
+        FOREST = 34,
+        LIGHTFOREST = 35,
+        GRASS1 = 36,
+        SNOWHILL = 37,
+        DESERTHILL = 38;
+      let tileset = {
+        tilesSize: 32,
+        connected: [
+          [WATER, 0, 0],
+          [ROAD, 1, 0],
+          [DESERT, 2, 3],
+          [DIRT, 2, 0],
+          [GRASS, 4, 0],
+          [BRIDGE, 5, 0],
+          [SNOW, 5, 3],
+          [HILLROAD, 6, 0],
+          [RIVER, 6, 3],
+          [RIVERDELTA, 7, 3],
+        ],
+        single: [
+          [HILL, 3, 1],
+          [CITY, 4, 5],
+          [DIRTHILL, 3, 5],
+          [SNOWHILL, 3, 6],
+          [DESERTHILL, 3, 7],
+          [MOUNTAIN, 4, 4],
+          [FOREST, 3, 3],
+          [LIGHTFOREST, 3, 4],
+          [STEPPE, 7, 1],
+          [GRASS1, 4, 3],
+        ],
+        grouped: [
+          [RIVER, RIVERDELTA],
+          [ROAD, BRIDGE],
+        ],
+        tilesheet: document.getElementById("tilesheet"),
+      };
+
+      let neighborDeltas = createNeighborDeltas(columns, AXIAL);
+
+      /**
+       * @typedef Cell
+       * @property {number} cover - 0, SNOW or DESERT
+       * @property {number} erection - 0, HILL or MOUNTAIN
+       * @property {number} water - 0, WATER or RIVER
+       * @property {number} river - if river, next cells it flows to. otherwise, 0
+       * @property {number} vegetation - 0 or FOREST
+       * @property {number} road - 0 or ROAD
+       * @property {number} building - 0 or CITY
+       */
+
+      /** @type {Cell[]} */
+      let hexMap = hexCoords.map((i, hexi) => {
+        /** @type {Cell} */
+        let c = {};
+
         let [e, h, t] = [elevation[i], humidity[i], temperature[i]];
-        let cover = 0;
-        if (t < random() * 0.2 - 0.1) cover = SNOW;
-        else if (h < 0.4 && t > 30) cover = DESERT;
 
-        if (cover) tile.push(cover);
-
-        if (!cover && h > 0.5) tile.push(GRASS);
-
-        let water = e<0/* || rivers[hexi] > 3*/;
-
-        let erection = 0;
-
-        if (!water && tectonic[i] > 0.9 + spread(0.2)) {
-          if (e > 0.4 + spread(0.2)) erection = MOUNTAIN;
-          else
-            erection =
-              cover == DESERT ? DESERTHILL : cover == SNOW ? SNOWHILL : HILL;
+        if(h==0){
+          return {empty:true};
         }
 
-        if (erection) tile.push(erection);
+        c.cover = 0;
+        if (t < random() * 0.2 - 0.1) c.cover = SNOW;
+        else if (h < 0.4 && t > 30) c.cover = DESERT;
 
-        let river = rivers[hexi] > 3;
+        let water = e < 0;
 
-        if (river) tile.push(RIVER);
-
-        if (h > 0.6 + spread(0.6) && !water && erection != MOUNTAIN)
-          if (cover || erection || river || h < 0.6) tile.push(LIGHTFOREST);
-          else tile.push(FOREST);
-
-        if (water) {
-          tile.push(WATER);
+        c.erection = 0;
+        if (
+          !water &&
+          (tectonic[i] > 0.9 + spread(0.2) || h > 0.5 + spread(0.4))
+        ) {
+          if (e > 0.4 + spread(0.2)) c.erection = MOUNTAIN;
+          else c.erection = HILL;
         }
 
-        return tile;
+        let river = riverDepth[hexi] > 3;
+
+        if (h > 0.6 + spread(0.6) && !water && c.erection != MOUNTAIN)
+          if (c.cover || c.erection || c.river || h < 0.6)
+            c.vegetation = LIGHTFOREST;
+          else c.vegetation = LIGHTFOREST;
+
+        if (!c.cover && !c.vegetation && h > 0.5) c.cover = GRASS;
+
+        if (water) c.water = river ? RIVERDELTA : WATER;
+
+        if (river) c.river = flowsTo[hexi];
+
+        return c;
+      });
+
+      let cities = [];
+      hexMap.forEach((c, i) => {
+        let quality =
+          10 +
+          (c.empty ? -10000 : 0) +
+          (c.water ? -1000 : 0) +
+          (c.river ? 10 : 0) +
+          (c.erection == MOUNTAIN ? -1000 : 0) +
+          (c.erection == HILL ? -10 : 0) +
+          (c.erection == DESERT ? -10 : 0);
+        for (let delta of neighborDeltas[0]) {
+          let neighbor = hexMap[i + delta];
+          quality +=
+            (c.river ? 5 : 0) +
+            (c.water ? 5 : 0) +
+            (c.water == RIVERDELTA ? 20 : 0) +
+            (c.cover == 0 ? 3 : 0);
+        }
+        if (quality / 500 > random()) {
+          c.building = CITY;
+          c.road = ROAD;
+          cities.push(i);
+        }
+      });
+
+      function shortestPath(start, end, cellCost) {
+        let bag = [start];
+        let wayCost = [];
+        wayCost[start] = 0.01;
+        let prev = [];
+        for (let i = 0; i < 10000; i++) {
+          if (bag.length == 0) return [];
+          let walking = bag.shift();
+          if (walking == end) {
+            let r = [];
+            while (walking) {
+              r.push(walking);
+              walking = prev[walking];
+            }
+            return r;
+          }
+          for (let delta of neighborDeltas[0]) {
+            let cell = walking + delta;
+            let cost = cellCost(hexMap[cell]);
+            let totalCost = cost + wayCost[walking];
+            if (!wayCost[cell] || wayCost[cell] > totalCost) {
+              let bigger = bag.findIndex((v) => wayCost[v] > totalCost);
+              bag.splice(bigger >= 0 ? bigger - 1 : bag.length, 0, cell);
+              wayCost[cell] = totalCost;
+              prev[cell] = walking;
+            }
+          }
+        }
+        return [];
+      }
+
+      function distanceBetweenCells(a, b, columns) {
+        let dx = (a % columns) - (b % columns);
+        let dy = Math.floor(a / columns) - Math.floor(b / columns);
+        let dist =
+          dx * dy > 0
+            ? Math.max(Math.abs(dx), Math.max(dy))
+            : Math.abs(dx - dy);
+        return dist;
+      }
+
+      console.time("roads");
+      for (let start of cities) {
+        let end = cities.reduce((a, b) =>
+          distanceBetweenCells(a, start, columns) <
+            distanceBetweenCells(b, start, columns) && a != start
+            ? a
+            : b
+        );
+        let path = shortestPath(start, end, (c) =>
+          !c
+            ? 1000
+            : c.water
+            ? 100
+            : c.river
+            ? 50
+            : c.erection == MOUNTAIN
+            ? 200
+            : c.erection
+            ? 50
+            : 10
+        );
+        for (let c of path) {
+          hexMap[c].road = ROAD;
+        }
+      }
+      console.timeEnd("roads");
+
+      let tiles = hexMap.map((c) => {
+        let sprites = [GRASS1];
+
+        if (c.cover) sprites.push(c.cover);
+
+        if (c.erection == HILL) {
+          sprites.push(
+            c.cover == DESERT ? DESERTHILL : c.cover == SNOW ? SNOWHILL : HILL
+          );
+        } else if (c.erection == MOUNTAIN) {
+          sprites.push(MOUNTAIN);
+        }
+
+        if (c.river) sprites.push(RIVER);
+
+        if (c.water) {
+          if (c.water == RIVERDELTA) {
+            sprites.push(WATER);
+          } 
+          sprites.push(c.water);
+        }
+
+        if (c.road) sprites.push(c.river || c.water ? BRIDGE : ROAD);
+
+        if (c.vegetation) sprites.push(c.vegetation);
+
+        if (c.building) sprites.push(c.building);
+
+        return sprites;
       });
 
       drawTerrain(
         hexmapCanvas.getContext("2d"),
-        rescale,
-        Math.floor((settings.width / 32) * settings.hexMapScale) * 2,
+        tiles,
+        { [RIVER]: flowsTo },
+        columns,
         tileset,
-        true
+        AXIAL
       );
     } else {
       hexmapCanvas.style = `display:none;`;

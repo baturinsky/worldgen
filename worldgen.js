@@ -578,32 +578,31 @@ function elevation2Image(
   };
 }
 
+const SQUARE = 0,
+  ODDR = 1,
+  AXIAL = 2;
+
 /**
  * Returns indices of the elementsthat lie on a different resolution grid
  * @param {number} width
  * @param {number} height
  * @param {number} scale - how lower new resolution is
- * @param {number} geometry - 0 for square grid,
- * 1 returns a hex grid with even rows shifted 0.5 right and rows height being 0.75 of columns width,
- * 2 returns a hex grid with row shifted left by 0.5 more with each row
+ * @param {number} geometry - SQUARE/0 for square grid,
+ * ODDR/1 returns a hex grid with even rows shifted 0.5 right and rows height being 0.75 of columns width,
+ * AXIAL/2 returns a hex grid with row shifted left by 0.5 more with each row
  */
 function rescaleCoordinates(width, height, scale, geometry) {
   let verticalScale = geometry == 0 ? scale : scale * 0.75;
-  let columns = Math.floor(width / scale) * (geometry == 2 ? 2 : 1);
+  let columns = Math.floor(width / scale) * (geometry == AXIAL ? 2 : 1);
   let rows = Math.floor(height / verticalScale);
 
   let result = new Array(rows * columns);
 
   for (let row = 0; row < rows; row++) {
     let y = Math.floor((row + 0.5) * verticalScale);
-    let startX =
-      geometry == 0
-        ? 1
-        : geometry == 1
-        ? row % 2 == 1
-          ? scale / 2
-          : 0
-        : -scale * 0.5 * row;
+    let startX = 0;
+    if (geometry == AXIAL) startX = -scale * 0.5 * row;
+    else if (geometry == ODDR) startX = row % 2 == 1 ? scale / 2 : 1;
     for (let column = 0; column < columns; column++) {
       let x = Math.floor(startX + column * scale);
       result[row * columns + column] = y * width + x;
@@ -640,32 +639,95 @@ function subImage(image, left, top, width, height) {
 }
 
 /**
- * Returns a matrix of rivers sizes per cell
+ * Returns the list of relative indices of neighbors for even and odd lines in clockwork order.
+ * @param {*} columns
+ * @param {*} geometry - one of SQUARE, ODDR or AXIAL
+ */ 
+function createNeighborDeltas(columns, geometry) {
+  let r;
+  switch (geometry) {
+    case SQUARE:
+      r = [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+        [-1, -1],
+      ].map(([dx, dy]) => dy * columns + dx);
+      return [r, r];
+    case ODDR:
+      return [
+        [
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 1],
+          [-1, 0],
+          [-1, -1],
+        ],
+        [
+          [1, -1],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [-1, 0],
+          [0, -1],
+        ],
+      ].map((n) => n.map(([dx, dy]) => dy * columns + dx));
+    case AXIAL:
+      r = [
+        [0, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 0],
+        [-1, -1],
+      ].map(([dx, dy]) => dy * columns + dx);
+      return [r, r];
+  }
+}
+
+/**
+ * Returns a matrix of rivers sizes and directions per cell
  * @param {number[]} heights
  * @param {number[]} neighborDeltas
  * @returns {number[]}
  */
-function generateCompleteRivers(heights, probability, attempts, neighborDeltas) {
+function generatePrettyRivers(
+  heights,
+  probability,
+  attempts,
+  neighborDeltas
+) {
   let hlen = heights.length;
-  let fat = 0;
-  let flow = new Int32Array(100);
-  let rivers = new Int32Array(hlen);
+  let courseAt = 0;
+  let course = new Int32Array(100);
+  let riverDepth = new Int32Array(hlen);
+  let flowsTo = new Int32Array(hlen);
   for (let riveri = 0; riveri < attempts; riveri++) {
     let at = Math.floor(random() * hlen);
     if (heights[at] <= 0 || probability[at] < random()) continue;
-    fat = 0;
-    while (heights[at] > 0 && fat < 100) {
+    courseAt = 0;
+    while (heights[at] > 0 && courseAt < 100) {
       let lowestNeighborDelta = neighborDeltas.reduce((a, b) =>
-        heights[at + a] - rivers[at + a] < heights[at + b] - rivers[at + b] ? a : b
+        heights[at + a] - riverDepth[at + a] <
+        heights[at + b] - riverDepth[at + b]
+          ? a
+          : b
       );
       if (heights[at + lowestNeighborDelta] >= heights[at]) break;
       at = at + lowestNeighborDelta;
-      flow[fat++] = at;
+      course[courseAt++] = at;
     }
-    if (fat > 2 && heights[at] <= 0) {
-      for (let i = 0; i < fat; i++) rivers[flow[i]]++;
+    if (courseAt > 2 && heights[at] <= 0) {
+      for (let i = 0; i < courseAt; i++) {
+        riverDepth[course[i]]++;
+        flowsTo[course[i]] = course[i+1];
+      }
     }
   }
-  console.log(rivers);
-  return rivers;
+  return {riverDepth, flowsTo};
 }
