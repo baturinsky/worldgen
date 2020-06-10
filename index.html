@@ -133,6 +133,26 @@
 
   let settings = null;
 
+  function init(){
+    if (document.location.hash) {
+      settings = {};
+      for (let ss of document.location.hash
+        .substr(1)
+        .split("&")
+        .map((s) => s.split("="))) {
+        settings[ss[0]] = ss[1] == "false" ? false : Number(ss[1]);
+      }
+    }
+
+    if (!settings || settings.width == 0)
+      settings = JSON.parse(localStorage.mapGenSettings || defaultSettings);
+
+    rebuildForm();
+    applySettings();
+  }  
+
+  window.onload = init;
+
   function resetSettings() {
     settings = JSON.parse(defaultSettings);
     rebuildForm();
@@ -169,23 +189,6 @@
       }
     }
   }
-
-  if (document.location.hash) {
-    settings = {};
-    for (let ss of document.location.hash
-      .substr(1)
-      .split("&")
-      .map((s) => s.split("="))) {
-      settings[ss[0]] = ss[1] == "false" ? false : Number(ss[1]);
-    }
-
-    console.log(settings);
-  }
-
-  if (!settings || settings.width == 0)
-    settings = JSON.parse(localStorage.mapGenSettings || defaultSettings);
-
-  rebuildForm();
 
   function saveSettings() {
     document.location.hash = Object.keys(settings)
@@ -595,6 +598,5 @@
 
     console.timeEnd("draw");
   }
-
-  applySettings();
+  
 </script>
