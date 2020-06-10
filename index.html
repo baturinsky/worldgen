@@ -338,7 +338,7 @@
       let columns =
         Math.floor((settings.width / 32) * settings.hexMapScale) * 2;
 
-      hexmapCanvas.width = settings.width * settings.hexMapScale * 2;
+      hexmapCanvas.width = settings.width * settings.hexMapScale + 32;
       hexmapCanvas.height = settings.height * settings.hexMapScale;
 
       hexmapCanvas.style = `display:block;width:${hexmapCanvas.width}px;height:${hexmapCanvas.height}px;`;
