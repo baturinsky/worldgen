@@ -168,6 +168,7 @@ function drawTerrain(ctx, grid, directional, columns, tileset, geometry) {
   });
 
   for (let ind = 0; ind < columns * rows; ind++) {
+    if(grid[ind])
     for (let layer of grid[ind]) {
       if (connected[layer])
         drawTile(

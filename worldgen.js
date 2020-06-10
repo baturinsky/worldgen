@@ -605,9 +605,11 @@ function rescaleCoordinates(width, height, scale, geometry) {
     else if (geometry == ODDR) startX = row % 2 == 1 ? scale / 2 : 1;
     for (let column = 0; column < columns; column++) {
       let x = Math.floor(startX + column * scale);
-      result[row * columns + column] = y * width + x;
+      if(x>=0 && x<=width)
+        result[row * columns + column] = y * width + x;
     }
   }
+  console.log(rows, columns);
   return result;
 }
 

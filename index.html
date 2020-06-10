@@ -108,8 +108,8 @@
   let defaultSettings = JSON.stringify({
     mapMode: 0,
     seed: 1,
-    width: 600,
-    height: 600,
+    width: 640,
+    height: 640,
     scale: 1,
     noiseFactor: 10,
     crustFactor: 6,
@@ -332,13 +332,13 @@
         settings.height,
         settings.width,
         32 / settings.hexMapScale,
-        2
+        AXIAL
       );
 
       let columns =
         Math.floor((settings.width / 32) * settings.hexMapScale) * 2;
 
-      hexmapCanvas.width = settings.width * settings.hexMapScale;
+      hexmapCanvas.width = settings.width * settings.hexMapScale * 2;
       hexmapCanvas.height = settings.height * settings.hexMapScale;
 
       hexmapCanvas.style = `display:block;width:${hexmapCanvas.width}px;height:${hexmapCanvas.height}px;`;
@@ -535,8 +535,8 @@
             : b
         );
         let path = shortestPath(start, end, (c) =>
-          !c
-            ? 1000
+          !c || c.empty
+            ? 1000000
             : c.water
             ? 100
             : c.river
