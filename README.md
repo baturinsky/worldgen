@@ -26,7 +26,7 @@ Bigger weight for "tectonic" makes more mountain ranges etc.
 also, it is reduced near high altitudes. Only horisontal (west-east) component is calculated. It is needed to simulate humidity.
 Result is smoothed by using "blur" canvas fitler.
 
-![Prevailing Winds](/screenshots/Prevailing Winds.png)
+![Prevailing Winds](/screenshots/Prevailing&#32;Winds.png)
 
 * Rivers and erosion caused by them is calculated. Algorithm is follows. Start many rivers. A river starts from random point, then go down the elevation.
 At each step, if we can go downwards, erode some elevation proportional to the elevation difference. If we can't, fill the current point with a sediment to the height of the lowest neighbors plus some low constant. We do that until we go to the elevation of -0.2. I.e. process does not stop exactly at the seas level, but continues a bit further, eroding or filling up the seas. It eleiminates most of smallish inland seas.
