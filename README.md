@@ -26,10 +26,14 @@ Bigger weight for "tectonic" makes more mountain ranges etc.
 also, it is reduced near high altitudes. Only horisontal (west-east) component is calculated. It is needed to simulate humidity.
 Result is smoothed by using "blur" canvas fitler.
 
+![Prevailing Winds](/screenshots/Prevailing Winds.png)
+
 * Rivers and erosion caused by them is calculated. Algorithm is follows. Start many rivers. A river starts from random point, then go down the elevation.
 At each step, if we can go downwards, erode some elevation proportional to the elevation difference. If we can't, fill the current point with a sediment to the height of the lowest neighbors plus some low constant. We do that until we go to the elevation of -0.2. I.e. process does not stop exactly at the seas level, but continues a bit further, eroding or filling up the seas. It eleiminates most of smallish inland seas.
 
-* "riverAge" rivers are simulating just for the sake of erosion/sedimentation without rememebering the flow. Then "riversShown" rivers are simulated, but their flow path is remembered and displayed.
+![Erosion Gif](/screenshots/ErosionBigGif.gif)
+
+* "erosion" rivers are simulating just for the sake of erosion/sedimentation without rememebering the flow. Then "riversShown" rivers are simulated, but their flow path is remembered and displayed.
 
 * Humidity is emulated. Iinitial humidity map is an image with some of alpha over water and zero elsewhere. It may be blurred a bit.
 Then, random spots are taken, and wind speed there is noted. Then semi-random direction is picked roughly in wind direction. A fragment of humidity image
