@@ -146,9 +146,9 @@ function generateMap({
   averageTemperature,
   biomeScrambling,
   pangaea,
-  riverAge,
+  erosion,
   riversShown,
-  randomiseHumidity = true,
+  randomiseHumidity,
 }) {
   randomSeed = seed;
 
@@ -173,10 +173,10 @@ function generateMap({
 
   console.time("main");
 
-  let tectonicQuantile = approximateQuantile(crust, 0.5);
+  let tectonicMedian = approximateQuantile(crust, 0.5);
 
   let tectonic = crust.map(
-    (v) => 1 / (1 + 5 * Math.atan(Math.abs(tectonicQuantile - v)))
+    (v) => 0.2 / (Math.abs(tectonicMedian - v)+0.1) - 0.95 
   );
 
   let elevation = noise.map(
@@ -211,14 +211,14 @@ function generateMap({
   let wind = elevation.map(
     (h, i) =>
       Math.cos((Math.abs(0.5 - i / mapSize) * 4 + 0.85) * Math.PI) /
-      (1 + 10 * Math.pow(Math.max(0, h), 2))
+      (h<0?1:(1 + 10 * h * h))
   );
 
   console.time("windSmoothing");
   wind = image2alpha(
     addFilter(
       data2image(wind, width, (v) => [0, 0, 0, 127 * (v + 1)]),
-      "blur(5px)"
+      "blur(3px)"
     )
   ).map((v) => v * 2 - 1);
   console.timeEnd("windSmoothing");
@@ -227,7 +227,8 @@ function generateMap({
     width,
     height,
     elevation,
-    riverAge,
+    tectonic,
+    erosion,
     riversShown,
   });
 
@@ -240,14 +241,14 @@ function generateMap({
   }
 
   let temperature = elevation.map(
-    (v, i) =>
+    (e, i) =>
       averageTemperature +
       35 -
       (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
-      Math.max(0, v) * 50
+      Math.max(0, e) * 30
   );
 
-  humidity = humidity.map((w, i) => w + Math.atan(-temperature[i] / 100));
+  humidity = humidity.map((w, i) => w * (1 + Math.atan(-temperature[i] / 100)));
 
   console.time("biome");
   let biome = temperature.map((t, i) => {
@@ -284,7 +285,7 @@ function generateMap({
             25 *
               (2 +
                 Math.atan(
-                  ((elevation[i - width] || 0) - 1 * elevation[i]) * 120
+                  ((elevation[i + width * (i>width*height/2?1:-1)] || 0) - 1 * elevation[i]) * 120
                 ))
         )
         .concat([255]);
@@ -327,14 +328,14 @@ function generateHumidity({ width, height, elevation, wind }) {
 
   wetness.ctx.drawImage(humidityImage, width / 2, height / 2);
 
-  wetness.ctx.filter = "opacity(20%)";
+  wetness.ctx.filter = "opacity(16%)";
   const spotSize = mapDiagonal / 10;
-  for (let i = 0; i < 1000; i++) {
-    let end = [random() * width, random() * height];
-    let endWind = wind[coord2ind(end, width)];
-    let start = [
-      end[0] + (endWind * (random() - 0.2) * width) / 6,
-      end[1] + (Math.abs(endWind) * (random() - 0.5) * height) / 16,
+  for (let i = 0; i < 1300; i++) {
+    let start = [random() * width, random() * height];
+    let windThere = wind[coord2ind(start, width)];
+    let end = [
+      start[0] - (windThere * (random() - 0.2) * width) / 6,
+      start[1] + (Math.abs(windThere) * (random() - 0.5) * height) / 12,
     ];
     wetness.ctx.drawImage(
       wetness.canvas,
@@ -349,7 +350,7 @@ function generateHumidity({ width, height, elevation, wind }) {
     );
   }
 
-  context2d(humidityImage).filter = "blur(30px)";
+  context2d(humidityImage).filter = "blur(5px)";
   context2d(humidityImage).drawImage(
     wetness.canvas,
     border,
@@ -374,7 +375,8 @@ function generateRiversAndErosion({
   height,
   elevation,
   humidity,
-  riverAge,
+  tectonic,
+  erosion,
   riversShown,
 }) {
   console.time("rivers");
@@ -394,18 +396,18 @@ function generateRiversAndErosion({
 
   for (
     let streamIndex = 0;
-    streamIndex < riverAge + riversShown;
+    streamIndex < erosion + riversShown;
     streamIndex++
   ) {
     let current = Math.floor(random() * width * height);
-    if (elevation[current] < random() * 0.4) continue;
+    if (elevation[current] < random()) continue;
 
     if (humidity && humidity[current] < random()) continue;
 
     let limit = 10000;
 
     while (elevation[current] > -0.15 && limit-- > 0) {
-      if (streamIndex > riverAge) {
+      if (streamIndex > erosion) {
         rivers[current] += 1;
       }
       let currentValue = elevation[current];
@@ -427,9 +429,17 @@ function generateRiversAndErosion({
         if (rivers[lowestNeighbor]) limit -= 10;
         current = lowestNeighbor;
       } else {
-        elevation[current] = lowestValue + 0.02;
+        elevation[current] = lowestValue + 0.02 * (1 - elevation[current]);
       }
     }
+
+    for(let i=0;i>10;i++){
+      let erosionPoint = Math.floor(random() * width * height);
+      let otherNeighbor = erosionPoint + neighbors[Math.floor(random()*8)];
+      if(elevation[otherNeighbor] > elevation[erosionPoint])
+        elevation[otherNeighbor] -= (elevation[otherNeighbor] - elevation[erosionPoint]) / 5 * (1 - tectonic[erosionPoint]);
+    }
+
   }
 
   console.timeEnd("rivers");

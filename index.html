@@ -30,7 +30,7 @@
     cursor: pointer;
   }
   #tooltip {
-    position: absolute;
+    position: fixed;
     display: none;
     grid-template-columns: 0fr 1fr;
     background: rgba(255, 255, 255, 0.6);
@@ -86,17 +86,18 @@
     ["tectonicSmoothness", "range", { max: 10, step: 0.5 }],
     ["noiseFactor", "range", { min: -5, max: 20, step: 0.5 }],
     ["crustFactor", "range", { min: -5, max: 20, step: 0.5 }],
-    ["tectonicFactor", "range", { min: -5, max: 20, step: 0.5 }],
+    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1 }],
     ["pangaea", "range", { min: -5, max: 5 }],
     ["seaRatio", "range"],
     ["flatness", "range"],
+    ["randomiseHumidity", "checkbox"],
     ["averageTemperature", "range", { min: -30, max: 50, step: 1 }],
-    ["riverAge", "range", { max: 100000 }],
+    ["erosion", "range", { max: 100000 }],
     ["riversShown", "range", { max: 1000 }],
     ["hexMapRivers", "range", { max: 50000, step: 1000 }],
     ["biomeScrambling", "range"],
     ["Graphical repesenation settings", "tip"],
-    ["discreteHeights", "range", { max: 40 }],
+    ["discreteHeights", "range", { max: 40, step: 1 }],
     ["terrainTypeColoring", "checkbox"],
     ["hillRatio", "range", { max: 0.3 }],
     ["mountainRatio", "range", { max: 0.3 }],
@@ -119,8 +120,9 @@
     pangaea: 0,
     seaRatio: 0.55,
     flatness: 0.5,
+    randomiseHumidity: false,
     averageTemperature: 15,
-    riverAge: 50000,
+    erosion: 50000,
     riversShown: 400,
     hexMapRivers: 15000,
     biomeScrambling: 0,
@@ -133,7 +135,7 @@
 
   let settings = null;
 
-  function init(){
+  function init() {
     if (document.location.hash) {
       settings = {};
       for (let ss of document.location.hash
@@ -149,7 +151,7 @@
 
     rebuildForm();
     applySettings();
-  }  
+  }
 
   window.onload = init;
 
@@ -263,8 +265,8 @@
       let mouseOffset = [e.offsetX, e.offsetY];
       let target = e.target;
       let tooltip = document.getElementById("tooltip");
-      tooltip.style.left = e.pageX - 300;
-      tooltip.style.top = e.pageY + 15;
+      tooltip.style.left = e.screenX < 300 ? e.screenX + 20 : e.screenX - 300;
+      tooltip.style.top = Math.min(window.innerHeight - 200, e.screenY - 40);
       let isCanvas = e.target.tagName == "CANVAS";
       tooltip.style.display = isCanvas ? "grid" : "none";
 
@@ -371,13 +373,14 @@
         LIGHTFOREST = 35,
         GRASS1 = 36,
         SNOWHILL = 37,
-        DESERTHILL = 38;
+        DESERTHILL = 38,
+        HILLFOREST = 39;
       let tileset = {
         tilesSize: 32,
         connected: [
           [WATER, 0, 0],
           [ROAD, 1, 0],
-          [DESERT, 2, 3],
+          [DESERT, 1, 3],
           [DIRT, 2, 0],
           [GRASS, 4, 0],
           [BRIDGE, 5, 0],
@@ -388,19 +391,20 @@
         ],
         single: [
           [HILL, 3, 1],
-          [CITY, 4, 5],
+          [CITY, 5, 6],
           [DIRTHILL, 3, 5],
           [SNOWHILL, 3, 6],
           [DESERTHILL, 3, 7],
           [MOUNTAIN, 4, 4],
           [FOREST, 3, 3],
-          [LIGHTFOREST, 3, 4],
+          [LIGHTFOREST, 4, 6],
+          [HILLFOREST, 4, 7],
           [STEPPE, 7, 1],
           [GRASS1, 4, 3],
         ],
         grouped: [
           [RIVER, RIVERDELTA],
-          [ROAD, BRIDGE],
+          [ROAD, BRIDGE, HILLROAD],
         ],
         tilesheet: document.getElementById("tilesheet"),
       };
@@ -425,33 +429,35 @@
 
         let [e, h, t] = [elevation[i], humidity[i], temperature[i]];
 
-        if(h==0){
-          return {empty:true};
+        if (h == 0) {
+          return { empty: true };
         }
 
         c.cover = 0;
         if (t < random() * 0.2 - 0.1) c.cover = SNOW;
-        else if (h < 0.4 && t > 30) c.cover = DESERT;
+        else if (h < 0.25 && t > 20) c.cover = DESERT;
 
         let water = e < 0;
 
         c.erection = 0;
         if (
           !water &&
-          (tectonic[i] > 0.9 + spread(0.2) || h > 0.5 + spread(0.4))
+          (tectonic[i] > 0.9 + spread(0.2) || e > 0.5 + spread(0.4))
         ) {
-          if (e > 0.4 + spread(0.2)) c.erection = MOUNTAIN;
+          if (e > 0.6 + spread(0.2)) c.erection = MOUNTAIN;
           else c.erection = HILL;
         }
 
         let river = riverDepth[hexi] > 3;
 
-        if (h > 0.6 + spread(0.6) && !water && c.erection != MOUNTAIN)
-          if (c.cover || c.erection || c.river || h < 0.6)
+        if (h > 0.6 + spread(0.6) && !water && c.erection != MOUNTAIN) {
+          /*if (c.cover || c.erection || c.river || h < 0.6)
             c.vegetation = LIGHTFOREST;
-          else c.vegetation = LIGHTFOREST;
+          else */
+          c.vegetation = LIGHTFOREST;
+        }
 
-        if (!c.cover && !c.vegetation && h > 0.5) c.cover = GRASS;
+        if (!c.cover && !c.vegetation && h > 0.66) c.cover = GRASS;
 
         if (water) c.water = river ? RIVERDELTA : WATER;
 
@@ -478,14 +484,15 @@
             (c.water == RIVERDELTA ? 20 : 0) +
             (c.cover == 0 ? 3 : 0);
         }
-        if (quality / 500 > random()) {
+        if (quality / 1000 > random()) {
           c.building = CITY;
           c.road = ROAD;
+          c.vegetation = 0;
           cities.push(i);
         }
       });
 
-      function shortestPath(start, end, cellCost) {
+      function shortestPath(world, start, end, cellCost) {
         let bag = [start];
         let wayCost = [];
         wayCost[start] = 0.01;
@@ -503,7 +510,7 @@
           }
           for (let delta of neighborDeltas[0]) {
             let cell = walking + delta;
-            let cost = cellCost(hexMap[cell]);
+            let cost = cellCost(world[cell]);
             let totalCost = cost + wayCost[walking];
             if (!wayCost[cell] || wayCost[cell] > totalCost) {
               let bigger = bag.findIndex((v) => wayCost[v] > totalCost);
@@ -534,18 +541,20 @@
             ? a
             : b
         );
-        let path = shortestPath(start, end, (c) =>
+        let path = shortestPath(hexMap, start, end, (c) =>
           !c || c.empty
             ? 1000000
+            : c.road
+            ? 1
             : c.water
-            ? 100
+            ? 500
             : c.river
-            ? 50
-            : c.erection == MOUNTAIN
             ? 200
+            : c.erection == MOUNTAIN
+            ? 2000
             : c.erection
-            ? 50
-            : 10
+            ? 100
+            : 30
         );
         for (let c of path) {
           hexMap[c].road = ROAD;
@@ -559,9 +568,10 @@
         if (c.cover) sprites.push(c.cover);
 
         if (c.erection == HILL) {
-          sprites.push(
-            c.cover == DESERT ? DESERTHILL : c.cover == SNOW ? SNOWHILL : HILL
-          );
+          if (!c.road)
+            sprites.push(
+              c.cover == DESERT ? DIRTHILL : c.cover == SNOW ? SNOWHILL : HILL
+            );
         } else if (c.erection == MOUNTAIN) {
           sprites.push(MOUNTAIN);
         }
@@ -571,13 +581,17 @@
         if (c.water) {
           if (c.water == RIVERDELTA) {
             sprites.push(WATER);
-          } 
+          }
           sprites.push(c.water);
         }
 
-        if (c.road) sprites.push(c.river || c.water ? BRIDGE : ROAD);
+        if (c.road)
+          sprites.push(
+            c.river || c.water ? BRIDGE : c.erection ? HILLROAD : ROAD
+          );
 
-        if (c.vegetation) sprites.push(c.vegetation);
+        if (c.vegetation == LIGHTFOREST)
+          sprites.push(c.erection && !c.road ? HILLFOREST : LIGHTFOREST);
 
         if (c.building) sprites.push(c.building);
 
@@ -598,5 +612,4 @@
 
     console.timeEnd("draw");
   }
-  
 </script>

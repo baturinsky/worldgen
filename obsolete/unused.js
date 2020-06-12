@@ -77,3 +77,13 @@ const redblobColors = mapToList({
   [SNOW]: "ffffff",
   [STEPPE]: "808080",
 }).map(colorFromRGBString);
+
+    //(v) => Math.max(0, 1 / (1 + 5 * Math.atan(Math.abs(tectonicMedian - v))) - 0.5) * 2
+
+
+        /*let end = [random() * width, random() * height];
+    let endWind = wind[coord2ind(end, width)];
+    let start = [
+      end[0] + (endWind * (random() - 0.2) * width) / 6,
+      end[1] + (Math.abs(endWind) * (random() - 0.5) * height) / 16,
+    ];*/
