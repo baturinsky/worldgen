@@ -95,10 +95,10 @@
     ["averageTemperature", "range", { min: -30, max: 50, step: 1 }],
     ["erosion", "range", { max: 100000, tip: "How long water-caused erosion will be simulated" }],
     ["riversShown", "range", { max: 1000, tip: "Amount of rivers and lakes shown on elevation, humidity and biome maps" }],
-    ["hexMapRivers", "range", { max: 50000, step: 1000, tip: "How many rivers will there be on the low-res (hex) map" }],
     ["biomeScrambling", "range", {tip: "Adds randomness to biomes"}],
-    ["SET THIS TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
+    ["SET hexMapScale TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
     ["hexMapScale", "range", { min: 0, max: 4, step: 1 }],
+    ["hexMapRivers", "range", { max: 50000, step: 1000, tip: "How many rivers will there be on the low-res (hex) map" }],
     ["Graphical repesenation settings", "tip"],
     ["discreteHeights", "range", { max: 40, step: 1 }],
     ["terrainTypeColoring", "checkbox"],
@@ -459,14 +459,14 @@
 
         let river = riverDepth[hexi] > 3;
 
-        if (h > 0.6 + spread(0.6) && !water && c.erection != MOUNTAIN) {
-          /*if (c.cover || c.erection || c.river || h < 0.6)
+        if (h > 0.6 + spread(0.4) && !water && c.erection != MOUNTAIN) {
+          /*if (!c.cover && !c.erection && !c.river && h > 0.6)
+            c.vegetation = FOREST;
+          else*/
             c.vegetation = LIGHTFOREST;
-          else */
-          c.vegetation = LIGHTFOREST;
         }
 
-        if (!c.cover && !c.vegetation && h > 0.66) c.cover = GRASS;
+        if (!c.cover && !c.vegetation && h > 0.55) c.cover = GRASS;
 
         if (water) c.water = river ? RIVERDELTA : WATER;
 
@@ -570,6 +570,9 @@
 
         if (c.vegetation == LIGHTFOREST)
           sprites.push(c.erection && !c.road ? HILLFOREST : LIGHTFOREST);
+
+        /*if (c.vegetation == FOREST)
+          sprites.push(FOREST);*/
 
         if (c.building) sprites.push(c.building);
 

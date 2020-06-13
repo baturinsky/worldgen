@@ -334,17 +334,17 @@ function generateHumidity({ width, height, elevation, wind }) {
     let start = [random() * width, random() * height];
     let windThere = wind[coord2ind(start, width)];
     let end = [
-      start[0] - (windThere * (random() - 0.2) * width) / 6,
+      start[0] + (windThere * (random() - 0.2) * width) / 6,
       start[1] + (Math.abs(windThere) * (random() - 0.5) * height) / 12,
     ];
     wetness.ctx.drawImage(
       wetness.canvas,
-      end[0] + border,
-      end[1] + border,
-      spotSize,
-      spotSize,
       start[0] + border,
       start[1] + border,
+      spotSize,
+      spotSize,
+      end[0] + border,
+      end[1] + border,
       spotSize,
       spotSize
     );

@@ -3,6 +3,8 @@ Fairly fast, fairly simple and fairly realistic terrain generator.
 
 ![Screenshot](/screenshots/index.png)
 
+![Screenshot](/screenshots/ThreeMaps.png)
+
 I tried to make a terrain generator that is simpler and easier to understand, yet sufficiently good.
 
 I don't use Voronoi or any other polygonal partition - it's a simple 2d grid.
