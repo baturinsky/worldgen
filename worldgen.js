@@ -743,3 +743,34 @@ function generatePrettyRivers(
   }
   return {riverDepth, flowsTo};
 }
+
+function shortestPath(world, start, end, neighborDeltas, cellCost) {
+  let bag = [start];
+  let wayCost = [];
+  wayCost[start] = 0.01;
+  let prev = [];
+  for (let i = 0; i < 10000; i++) {
+    if (bag.length == 0) return [];
+    let walking = bag.shift();
+    if (walking == end) {
+      let r = [];
+      while (walking) {
+        r.push(walking);
+        walking = prev[walking];
+      }
+      return r;
+    }
+    for (let delta of neighborDeltas[0]) {
+      let cell = walking + delta;
+      let cost = cellCost(world[cell]);
+      let totalCost = cost + wayCost[walking];
+      if (!wayCost[cell] || wayCost[cell] > totalCost) {
+        let bigger = bag.findIndex((v) => wayCost[v] > totalCost);
+        bag.splice(bigger >= 0 ? bigger - 1 : bag.length, 0, cell);
+        wayCost[cell] = totalCost;
+        prev[cell] = walking;
+      }
+    }
+  }
+  return [];
+}

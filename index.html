@@ -32,6 +32,7 @@
   #tooltip {
     position: fixed;
     display: none;
+    grid-template-columns: 0fr 1fr;
     background: rgba(255, 255, 255, 0.6);
     padding: 1em;
     box-shadow: 2px 2px 2px black;
@@ -85,7 +86,7 @@
     ["noiseSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the elevation noise" }],
     ["tectonicSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the noise that is used for tectonic plates simulation" }],
     ["noiseFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'general purpose' elevation noise" }],
-    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1, tip: "Amount of omuntains and island chains and such" }],
+    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1, tip: "Amount of mountains and island chains and such" }],
     ["crustFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'tectonic plates' noise. Increase to have more mountains on the edge on continents, reduce to have them inside."}],
     ["pangaea", "range", { min: -5, max: 5, tip: "Increasing this will make land gravitate the centre of the map, and vice versa" }],
     ["seaRatio", "range", {tip: "Sea percentage"}],
@@ -292,7 +293,7 @@
           )
           .join("");
       } else if (tips[id]){
-        tooltip.innerHTML = `<div class="settingsTip">${tips[id]}</div>`;
+        tooltip.innerHTML = tips[id];
       }
     };
 
@@ -500,37 +501,6 @@
         }
       });
 
-      function shortestPath(world, start, end, cellCost) {
-        let bag = [start];
-        let wayCost = [];
-        wayCost[start] = 0.01;
-        let prev = [];
-        for (let i = 0; i < 10000; i++) {
-          if (bag.length == 0) return [];
-          let walking = bag.shift();
-          if (walking == end) {
-            let r = [];
-            while (walking) {
-              r.push(walking);
-              walking = prev[walking];
-            }
-            return r;
-          }
-          for (let delta of neighborDeltas[0]) {
-            let cell = walking + delta;
-            let cost = cellCost(world[cell]);
-            let totalCost = cost + wayCost[walking];
-            if (!wayCost[cell] || wayCost[cell] > totalCost) {
-              let bigger = bag.findIndex((v) => wayCost[v] > totalCost);
-              bag.splice(bigger >= 0 ? bigger - 1 : bag.length, 0, cell);
-              wayCost[cell] = totalCost;
-              prev[cell] = walking;
-            }
-          }
-        }
-        return [];
-      }
-
       function distanceBetweenCells(a, b, columns) {
         let dx = (a % columns) - (b % columns);
         let dy = Math.floor(a / columns) - Math.floor(b / columns);
@@ -549,7 +519,7 @@
             ? a
             : b
         );
-        let path = shortestPath(hexMap, start, end, (c) =>
+        let path = shortestPath(hexMap, start, end, neighborDeltas, (c) =>
           !c || c.empty
             ? 1000000
             : c.road
