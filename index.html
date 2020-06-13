@@ -96,12 +96,13 @@
     ["riversShown", "range", { max: 1000 }],
     ["hexMapRivers", "range", { max: 50000, step: 1000 }],
     ["biomeScrambling", "range"],
+    ["SET THIS TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
+    ["hexMapScale", "range", { min: 0, max: 4, step: 1 }],
     ["Graphical repesenation settings", "tip"],
     ["discreteHeights", "range", { max: 40, step: 1 }],
     ["terrainTypeColoring", "checkbox"],
     ["hillRatio", "range", { max: 0.3 }],
     ["mountainRatio", "range", { max: 0.3 }],
-    ["hexMapScale", "range", { min: 0, max: 4, step: 1 }],
   ];
 
   let miniMapSize = 200;
@@ -130,7 +131,7 @@
     discreteHeights: 0,
     hillRatio: 0.12,
     mountainRatio: 0.04,
-    hexMapScale: 0,
+    hexMapScale: 2,
   });
 
   let settings = null;
