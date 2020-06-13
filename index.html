@@ -32,11 +32,11 @@
   #tooltip {
     position: fixed;
     display: none;
-    grid-template-columns: 0fr 1fr;
     background: rgba(255, 255, 255, 0.6);
     padding: 1em;
     box-shadow: 2px 2px 2px black;
     width: 260px;
+    pointer-events: none;
   }
   #tooltip div {
     padding-left: 5px;
@@ -49,12 +49,13 @@
   #tilesheet {
     display: none;
   }
+
 </style>
 
 <body>
   <img id="tilesheet" src="tilesets/hexSheet2.png" />
   <div id="tooltip">tooltip</div>
-  Worldgen by <a href="https://twitter.com/baturinsky">Alexander Petrov</a> -
+  Worldgen by <a href="https://twitter.com/baturinsky">@baturinsky</a> -
   <a href="https://github.com/baturinsky/worldgen">source at github</a>
   <div class="all">
     <div>
@@ -78,24 +79,23 @@
   let mouseOffset = [0, 0];
 
   const parameters = [
-    ["seed", "number"],
-    ["width", "number"],
-    ["height", "number"],
-    ["scale", "range", { max: 10 }],
-    ["noiseSmoothness", "range", { max: 10, step: 0.5 }],
-    ["tectonicSmoothness", "range", { max: 10, step: 0.5 }],
-    ["noiseFactor", "range", { min: -5, max: 20, step: 0.5 }],
-    ["crustFactor", "range", { min: -5, max: 20, step: 0.5 }],
-    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1 }],
-    ["pangaea", "range", { min: -5, max: 5 }],
-    ["seaRatio", "range"],
-    ["flatness", "range"],
+    ["seed", "number", {tip: "Seed for the random number generator."}],
+    ["width", "number", {tip: "Map width in pixels"}],
+    ["height", "number", {tip: "Map height in pixels"}],
+    ["noiseSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the elevation noise" }],
+    ["tectonicSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the noise that is used for tectonic plates simulation" }],
+    ["noiseFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'general purpose' elevation noise" }],
+    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1, tip: "Amount of omuntains and island chains and such" }],
+    ["crustFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'tectonic plates' noise. Increase to have more mountains on the edge on continents, reduce to have them inside."}],
+    ["pangaea", "range", { min: -5, max: 5, tip: "Increasing this will make land gravitate the centre of the map, and vice versa" }],
+    ["seaRatio", "range", {tip: "Sea percentage"}],
+    ["flatness", "range", {tip: "Initial flatness of the non-mountain areas"}],
     ["randomiseHumidity", "checkbox"],
     ["averageTemperature", "range", { min: -30, max: 50, step: 1 }],
-    ["erosion", "range", { max: 100000 }],
-    ["riversShown", "range", { max: 1000 }],
-    ["hexMapRivers", "range", { max: 50000, step: 1000 }],
-    ["biomeScrambling", "range"],
+    ["erosion", "range", { max: 100000, tip: "How long water-caused erosion will be simulated" }],
+    ["riversShown", "range", { max: 1000, tip: "Amount of rivers and lakes shown on elevation, humidity and biome maps" }],
+    ["hexMapRivers", "range", { max: 50000, step: 1000, tip: "How many rivers will there be on the low-res (hex) map" }],
+    ["biomeScrambling", "range", {tip: "Adds randomness to biomes"}],
     ["SET THIS TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
     ["hexMapScale", "range", { min: 0, max: 4, step: 1 }],
     ["Graphical repesenation settings", "tip"],
@@ -162,6 +162,8 @@
     applySettings();
   }
 
+  let tips = {};
+
   function rebuildForm() {
     let form = document.getElementById("form");
     form.innerHTML = "";
@@ -169,6 +171,7 @@
     for (let param of parameters) {
       let [id, type, also] = param;
       also = also || {};
+      tips[id] = also.tip;
       switch (type) {
         case "tip":
           form.innerHTML += `<div class="tip">${id}</div>`;
@@ -266,10 +269,12 @@
       let mouseOffset = [e.offsetX, e.offsetY];
       let target = e.target;
       let tooltip = document.getElementById("tooltip");
-      tooltip.style.left = e.screenX < 300 ? e.screenX + 20 : e.screenX - 300;
+      tooltip.style.left = Math.min(window.innerWidth - 300, e.screenX + 20);
       tooltip.style.top = Math.min(window.innerHeight - 200, e.screenY - 40);
+      
       let isCanvas = e.target.tagName == "CANVAS";
-      tooltip.style.display = isCanvas ? "grid" : "none";
+      let id = e.target.id;
+      tooltip.style.display = isCanvas?"grid": tips[id] ? "block" : "none";
 
       if (isCanvas) {
         let localX = (e.offsetX / target.width) * settings.width;
@@ -286,6 +291,8 @@
                 }</div>`
           )
           .join("");
+      } else if (tips[id]){
+        tooltip.innerHTML = `<div class="settingsTip">${tips[id]}</div>`;
       }
     };
 
