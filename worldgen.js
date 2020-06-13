@@ -176,7 +176,7 @@ function generateMap({
   let tectonicMedian = approximateQuantile(crust, 0.5);
 
   let tectonic = crust.map(
-    (v) => 0.2 / (Math.abs(tectonicMedian - v)+0.1) - 0.95 
+    (v) => 0.2 / (Math.abs(tectonicMedian - v) + 0.1) - 0.95
   );
 
   let elevation = noise.map(
@@ -211,7 +211,7 @@ function generateMap({
   let wind = elevation.map(
     (h, i) =>
       Math.cos((Math.abs(0.5 - i / mapSize) * 4 + 0.85) * Math.PI) /
-      (h<0?1:(1 + 10 * h * h))
+      (h < 0 ? 1 : 1 + 5 * h * h)
   );
 
   console.time("windSmoothing");
@@ -285,7 +285,11 @@ function generateMap({
             25 *
               (2 +
                 Math.atan(
-                  ((elevation[i + width * (i>width*height/2?1:-1)] || 0) - 1 * elevation[i]) * 120
+                  ((elevation[
+                    i + width * (i > (width * height) / 2 ? 1 : -1)
+                  ] || 0) -
+                    1 * elevation[i]) *
+                    120
                 ))
         )
         .concat([255]);
@@ -432,14 +436,6 @@ function generateRiversAndErosion({
         elevation[current] = lowestValue + 0.02 * (1 - elevation[current]);
       }
     }
-
-    for(let i=0;i>10;i++){
-      let erosionPoint = Math.floor(random() * width * height);
-      let otherNeighbor = erosionPoint + neighbors[Math.floor(random()*8)];
-      if(elevation[otherNeighbor] > elevation[erosionPoint])
-        elevation[otherNeighbor] -= (elevation[otherNeighbor] - elevation[erosionPoint]) / 5 * (1 - tectonic[erosionPoint]);
-    }
-
   }
 
   console.timeEnd("rivers");
@@ -615,8 +611,7 @@ function rescaleCoordinates(width, height, scale, geometry) {
     else if (geometry == ODDR) startX = row % 2 == 1 ? scale / 2 : 1;
     for (let column = 0; column < columns; column++) {
       let x = Math.floor(startX + column * scale);
-      if(x>=0 && x<=width)
-        result[row * columns + column] = y * width + x;
+      if (x >= 0 && x <= width) result[row * columns + column] = y * width + x;
     }
   }
   console.log(rows, columns);
@@ -654,7 +649,8 @@ function subImage(image, left, top, width, height) {
  * Returns the list of relative indices of neighbors for even and odd lines in clockwork order.
  * @param {*} columns
  * @param {*} geometry - one of SQUARE, ODDR or AXIAL
- */ 
+ */
+
 function createNeighborDeltas(columns, geometry) {
   let r;
   switch (geometry) {
@@ -708,12 +704,7 @@ function createNeighborDeltas(columns, geometry) {
  * @param {number[]} neighborDeltas
  * @returns {number[]}
  */
-function generatePrettyRivers(
-  heights,
-  probability,
-  attempts,
-  neighborDeltas
-) {
+function generatePrettyRivers(heights, probability, attempts, neighborDeltas) {
   let hlen = heights.length;
   let courseAt = 0;
   let course = new Int32Array(100);
@@ -737,11 +728,11 @@ function generatePrettyRivers(
     if (courseAt > 2 && heights[at] <= 0) {
       for (let i = 0; i < courseAt; i++) {
         riverDepth[course[i]]++;
-        flowsTo[course[i]] = course[i+1];
+        flowsTo[course[i]] = course[i + 1];
       }
     }
   }
-  return {riverDepth, flowsTo};
+  return { riverDepth, flowsTo };
 }
 
 function shortestPath(world, start, end, neighborDeltas, cellCost) {

@@ -87,3 +87,10 @@ const redblobColors = mapToList({
       end[0] + (endWind * (random() - 0.2) * width) / 6,
       end[1] + (Math.abs(endWind) * (random() - 0.5) * height) / 16,
     ];*/
+
+    /*for(let i=0;i>10;i++){
+      let erosionPoint = Math.floor(random() * width * height);
+      let otherNeighbor = erosionPoint + neighbors[Math.floor(random()*8)];
+      if(elevation[otherNeighbor] > elevation[erosionPoint])
+        elevation[otherNeighbor] -= (elevation[otherNeighbor] - elevation[erosionPoint]) / 5 * (1 - tectonic[erosionPoint]);
+    }*/
