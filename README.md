@@ -7,8 +7,10 @@ Fairly fast, fairly simple and fairly realistic terrain generator.
 
 I tried to make a terrain generator that is simpler and easier to understand, yet sufficiently good.
 
-I don't use Voronoi or any other polygonal partition - it's a simple 2d grid.
+I don't use Voronoi or any other polygonal partition - it's a simple 2d grid, rectangular and/or hexagonal (depending on stage).
 That lets me use canvas drawing for accelerating certain taxing simulation step.
+
+I was using Earth maps for the reference of what I want to get. I will show them alongside with my program's outputs for comparison.
 
 So, it works as follows.
 
@@ -22,6 +24,7 @@ on canvas and using their sum. Btw, it allows writing a simple terrain generatio
 what I use is just a bit more complex: instead of circles, I use ellipses that have opacity gradually reduce from center to edges.
 
 # Tectonics 
+
 
 ![Tectonics](/screenshots/TectonicsSimulation.jpg)
 
@@ -137,3 +140,30 @@ Also, TUNDRA becomes MOUNTAIN at the altitude above 0.5.
 Algorithm is similar to biomes, but is more gradient. Generally, it is yellower/whiter in dry area, greener/darker in humid areas,
 blacker at high altitudes, white below 0 Celsius, lighter on equator-side slopes and darker on opposing slopes.
 
+# Hexagonal map
+
+Finally a hexagonal game map is made. Let's call map that we made by now a "terrain map", and hexagonal map a "game map".
+First, a list is made that links the game map cells (aka "hex") and dots on terrain map.
+
+Then, for each hex we take corresponding dot's elevation, temperature, humidity and tectonic activity and assign a terrain types.
+
+Depending on terrain, hex can have "cover" (shallow grass, dense grass, sand and snow), vegetation (currently only forest), erection (hill or mountain), water (sea). Those can combine, for example, it can be a sandy hill, or even snowy water. Latter case can affectthe look of the shores if this tile is next to the land, for example.
+
+Algorithm is similar to the biome calculation, but has different possible variant and some added randomness. 
+
+# Hex rivers
+
+Then, (yet again) river simulation happens. We have to do it here instead of taking data from river simulation on earlier stage, because, well those do not convert well to big hex cells.
+
+So, algorithm is similar, we take random point and launch stream downwards. Chance of hex being chosen as a starting point depends on it's altitude and humidity.
+We do not emulate erosion/edimentations now. If we can't reach the deep water, we just abort entire stream. Also, we remember the direction of the stream, and always prefer to join the already existing stream, instead of going to lowest nearby cell, if possible.
+
+We need to know the stream direction, so we can properly display three adjacent cells with rivers (i.e. avoid them forming a triangle). 
+
+We only cound hex a river if at least 4 streams have flown there, to avoid having too many short rivers.
+
+# Towns and roads
+
+Town positioning uses very simple algorithm - it just adds some values for certain terrain traits (such as river, mountain etc) on and near the town cell, and make a random roll depending on it.
+
+Then from each city, a shortest path to the nearest town is found and road is build on it. This considers the movement costs, insluding effect of already present roads.

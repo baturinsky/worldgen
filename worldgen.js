@@ -277,20 +277,19 @@ function generateMap({
     if (elevation[i] < 0)
       return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
     else
-      return [100 - w * 600 + temperature[i] * 5, 200 - w * 200, 130 - w * 300]
+      return [100 - w * 400 + temperature[i] * 4, 160 - w * 150, 100 - w * 150]
         .map(
           (v) =>
             (temperature[i] < 0 ? 255 : v) +
             -elevation[i] * 140 +
+            50 +
             25 *
-              (2 +
-                Math.atan(
-                  ((elevation[
-                    i + width * (i > (width * height) / 2 ? 1 : -1)
-                  ] || 0) -
-                    1 * elevation[i]) *
-                    120
-                ))
+              Math.atan(
+                ((elevation[i + width * (i > (width * height) / 2 ? 1 : -1)] ||
+                  0) -
+                  1 * elevation[i]) *
+                  120
+              )
         )
         .concat([255]);
   });
