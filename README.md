@@ -99,6 +99,9 @@ Basically, we repeatedly grab some humidity at the random point of the map, then
 JS Canvas capabilities are used heavily here. Initial humidity map is a monochrome image with certain alpha value over the water and zero elsewhere. It may be blurred a bit. Then, in cycle, random spots are taken, and wind speed there is noted. Then semi-random direction is picked roughly in the prevailing wind direction. A fragment of humidity image is cut out and displaced in that direction, added to same very image. Final result is blurred.
 
 # Temperature 
+
+![Temperature](/screenshots/TemperatureSimulation.jpg)
+
 Average temperature (in Celsius) is calculated from latitude and altitude. Effect of latitude is somewhat reduced in high humidity area, to simulate of softer climate from sea winds.
 
     let temperature = elevation.map(
