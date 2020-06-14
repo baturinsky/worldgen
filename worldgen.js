@@ -243,8 +243,8 @@ function generateMap({
   let temperature = elevation.map(
     (e, i) =>
       averageTemperature +
-      35 -
-      (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
+      25 -
+      (100 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
       Math.max(0, e) * 30
   );
 
@@ -276,22 +276,30 @@ function generateMap({
   let photo = [...humidity].map((w, i) => {
     if (elevation[i] < 0)
       return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
-    else
-      return [100 - w * 400 + temperature[i] * 4, 160 - w * 150, 100 - w * 150]
-        .map(
-          (v) =>
-            (temperature[i] < 0 ? 255 : v) +
-            -elevation[i] * 140 +
+    else {
+      let rgba = [
+        100 - w * 800 + temperature[i] * 10,
+        200 - w * 150,
+        100 - w * 150,
+        255,
+      ];
+      for (let j = 0; j < 3; j++) {
+        if (temperature[i] < 0) rgba[j] = 255;
+        else
+          rgba[j] +=
             50 +
+            -elevation[i] * 140 +
             25 *
               Math.atan(
-                ((elevation[i + width * (i > (width * height) / 2 ? 1 : -1)] ||
-                  0) -
-                  1 * elevation[i]) *
-                  120
-              )
-        )
-        .concat([255]);
+                120 *
+                  ((elevation[
+                    i + width * (i > (width * height) / 2 ? 1 : -1)
+                  ] || 0) -
+                    elevation[i])
+              );
+      }
+      return rgba;
+    }
   });
   console.timeEnd("photo");
 
@@ -331,13 +339,13 @@ function generateHumidity({ width, height, elevation, wind }) {
 
   wetness.ctx.drawImage(humidityImage, width / 2, height / 2);
 
-  wetness.ctx.filter = "opacity(16%)";
+  wetness.ctx.filter = "opacity(15%)";
   const spotSize = mapDiagonal / 10;
-  for (let i = 0; i < 1300; i++) {
+  for (let i = 0; i < 1200; i++) {
     let start = [random() * width, random() * height];
     let windThere = wind[coord2ind(start, width)];
     let end = [
-      start[0] + (windThere * (random() - 0.2) * width) / 6,
+      start[0] + (windThere * (random() - 0.2) * width) / 8,
       start[1] + (Math.abs(windThere) * (random() - 0.5) * height) / 12,
     ];
     wetness.ctx.drawImage(
@@ -353,7 +361,7 @@ function generateHumidity({ width, height, elevation, wind }) {
     );
   }
 
-  context2d(humidityImage).filter = "blur(5px)";
+  context2d(humidityImage).filter = "blur(10px)";
   context2d(humidityImage).drawImage(
     wetness.canvas,
     border,
@@ -386,16 +394,7 @@ function generateRiversAndErosion({
 
   let rivers = new Float32Array(width * height);
 
-  let neighbors = [
-    -1,
-    1,
-    -width,
-    width,
-    -1 - width,
-    1 + width,
-    1 - width,
-    -1 + width,
-  ];
+  let neighbors = createNeighborDeltas(width, SQUARE)[0];
 
   for (
     let streamIndex = 0;
@@ -714,7 +713,7 @@ function generatePrettyRivers(heights, probability, attempts, neighborDeltas) {
     if (heights[at] <= 0 || probability[at] < random()) continue;
     courseAt = 0;
     while (heights[at] > 0 && courseAt < 100) {
-      let lowestNeighborDelta = neighborDeltas.reduce((a, b) =>
+      let lowestNeighborDelta = neighborDeltas[0].reduce((a, b) =>
         heights[at + a] - riverDepth[at + a] <
         heights[at + b] - riverDepth[at + b]
           ? a

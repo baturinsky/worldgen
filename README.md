@@ -69,17 +69,19 @@ Higher "flatness" makes part of the land not on tectonic seams lower and flatter
           )
     );
 
-# Erosion
+# Temperature 
 
-![Sedimentation](/screenshots/Sedimentation.jpg)
+![Temperature](/screenshots/TemperatureSimulation.jpg)
 
-Rivers and erosion caused by them is calculated. Algorithm is follows. Start many streams (amount set by "erosion" slider). A steam starts from random point, then goes down the elevation. At each step, if we can go downwards, erode some elevation proportional to the elevation difference. If we can't, fill the current point with a sediment to the height of the lowest neighbors plus some low constant. We do that until we go to the elevation of -0.2. I.e. process does not stop exactly at the seas level, but continues a bit further, eroding or filling up the seas. It eliminates most of smallish inland seas.
+Average temperature (in Celsius) is calculated from latitude and altitude. Effect of latitude is somewhat reduced in high humidity area, to simulate of softer climate from sea winds.
 
-Here how this changes the terrain:
-
-![Erosion Gif](/screenshots/ErosionBigGif.gif)
-
-After erosion emulation is complete, the same algorithm also makes "riversShown" streams, but now their path is remembered and displayed as tivers/lakes.
+    let temperature = elevation.map(
+      (e, i) =>
+        averageTemperature +
+        35 -
+        (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
+        Math.max(0, e) * 30
+    );
 
 # Prevailing Winds
 
@@ -101,19 +103,18 @@ Basically, we repeatedly grab some humidity at the random point of the map, then
 
 JS Canvas capabilities are used heavily here. Initial humidity map is a monochrome image with certain alpha value over the water and zero elsewhere. It may be blurred a bit. Then, in cycle, random spots are taken, and wind speed there is noted. Then semi-random direction is picked roughly in the prevailing wind direction. A fragment of humidity image is cut out and displaced in that direction, added to same very image. Final result is blurred.
 
-# Temperature 
+# Erosion
 
-![Temperature](/screenshots/TemperatureSimulation.jpg)
+![Sedimentation](/screenshots/Sedimentation.jpg)
 
-Average temperature (in Celsius) is calculated from latitude and altitude. Effect of latitude is somewhat reduced in high humidity area, to simulate of softer climate from sea winds.
+Rivers and erosion caused by them is calculated. Algorithm is follows. Start many streams (amount set by "erosion" slider). A steam starts from random point, then goes down the elevation. At each step, if we can go downwards, erode some elevation proportional to the elevation difference. If we can't, fill the current point with a sediment to the height of the lowest neighbors plus some low constant. We do that until we go to the elevation of -0.2. I.e. process does not stop exactly at the seas level, but continues a bit further, eroding or filling up the seas. It eliminates most of smallish inland seas.
 
-    let temperature = elevation.map(
-      (e, i) =>
-        averageTemperature +
-        35 -
-        (120 * Math.abs(0.5 - i / mapSize)) / (0.7 + 0.6 * humidity[i]) -
-        Math.max(0, e) * 30
-    );
+Here how this changes the terrain:
+
+![Erosion Gif](/screenshots/ErosionBigGif.gif)
+
+After erosion emulation is complete, the same algorithm also makes "riversShown" streams, but now their path is remembered and displayed as tivers/lakes.
+
 
 # Biomes
 
@@ -147,7 +148,7 @@ First, a list is made that links the game map cells (aka "hex") and dots on terr
 
 Then, for each hex we take corresponding dot's elevation, temperature, humidity and tectonic activity and assign a terrain types.
 
-Depending on terrain, hex can have "cover" (shallow grass, dense grass, sand and snow), vegetation (currently only forest), erection (hill or mountain), water (sea). Those can combine, for example, it can be a sandy hill, or even snowy water. Latter case can affectthe look of the shores if this tile is next to the land, for example.
+Depending on terrain, hex can have "cover" (shallow grass, dense grass, sand and snow), vegetation (currently only forest), highlands (hill or mountain), water (sea). Those can combine, for example, it can be a sandy hill, or even snowy water. Latter case can affectthe look of the shores if this tile is next to the land, for example.
 
 Algorithm is similar to the biome calculation, but has different possible variant and some added randomness. 
 
@@ -155,7 +156,7 @@ Algorithm is similar to the biome calculation, but has different possible varian
 
 Then, (yet again) river simulation happens. We have to do it here instead of taking data from river simulation on earlier stage, because, well those do not convert well to big hex cells.
 
-So, algorithm is similar, we take random point and launch stream downwards. Chance of hex being chosen as a starting point depends on it's altitude and humidity.
+So, algorithm is similar, we take random point and launch a stream downwards. Chance of hex being chosen as a starting point depends on it's altitude and humidity.
 We do not emulate erosion/edimentations now. If we can't reach the deep water, we just abort entire stream. Also, we remember the direction of the stream, and always prefer to join the already existing stream, instead of going to lowest nearby cell, if possible.
 
 We need to know the stream direction, so we can properly display three adjacent cells with rivers (i.e. avoid them forming a triangle). 
