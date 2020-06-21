@@ -21,10 +21,10 @@ function createCanvasCtx(width, height) {
 }
 
 /**
- * Creates a 12-sector masks for cutting up hexes
+ * Creates a sectored masks for cutting up hexes (or squares)
  */
-function createMask(size = 32) {
-  let canvases = [...Array(13)].map(() => {
+function createMask(size = 32, sectorsNumber=12) {
+  let canvases = [...Array(sectorsNumber+1)].map(() => {
     let { canvas, ctx } = createCanvasCtx(size, size);
     let data = ctx.createImageData(size, size);
     return { canvas, data };
@@ -58,7 +58,7 @@ function cutImageUp(image, left, top, masks) {
   let r = size / 2;
 
   for (let part = 0; part < 3; part++) {
-    for (let sector = 0; sector < 12; sector++) {
+    for (let sector = 0; sector < masks.length-1; sector++) {
       let { canvas, ctx } = createCanvasCtx(r * 2, r * 2);
 
       ctx.drawImage(masks[sector], 0, 0);
@@ -85,30 +85,15 @@ function cutImageUp(image, left, top, masks) {
   return imagePieces;
 }
 
-function ind2xy(xy, columns) {
-  let x = xy % columns;
-  let y = (xy - x) / columns;
-  return [x, y];
-}
-
-function screenPos(ind, columns, hexWidth, geometry, hexHeight = 0) {
-  let [x, y] = ind2xy(ind, columns);
-  return [
-    (x + (geometry == 0 ? 0 : geometry == 1 ? (y % 2) * 0.5 : -y * 0.5)) *
-      hexWidth,
-    y * (hexHeight || hexWidth * 0.75),
-  ];
-}
-
-function drawTile(ctx, tile, ind, columns, geometry, neighborDeltas, connect) {
+function drawTile(ctx, tile, ind, layout, columns, neighborDeltas, connect) {
   if (!neighborDeltas) {
-    let [tileX, tileY] = screenPos(ind, columns, tile.width, geometry);
+    let [tileX, tileY] = screenPos(ind, columns, tile.width, layout);
     ctx.drawImage(tile, tileX, tileY);
     return;
   }
-  let [tileX, tileY] = screenPos(ind, columns, tile[0].width, geometry);
-  let y = Math.floor(ind / columns);
-  let deltas = neighborDeltas[y % 2];
+  let [tileX, tileY] = screenPos(ind, columns, tile[0].width, layout);
+  let row = Math.floor(ind / columns);
+  let deltas = neighborDeltas[row % 2];
   for (let subi = 0; subi < 12; subi++) {
     let imagei = subi;
     let side = Math.floor(subi / 2);
@@ -121,8 +106,8 @@ function drawTile(ctx, tile, ind, columns, geometry, neighborDeltas, connect) {
   }
 }
 
-function drawTerrain(ctx, grid, directional, columns, tileset, geometry) {
-  let neighborDeltas = createNeighborDeltas(columns, geometry);
+function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
+  let neighborDeltas = createNeighborDeltas(columns, layout);
   let tileSize = tileset.tilesSize;
   let rows = grid.length / columns;
 
@@ -162,32 +147,32 @@ function drawTerrain(ctx, grid, directional, columns, tileset, geometry) {
   let bits = grid.map((list) => {
     let b = 0;
     for (let v of list) {
-      if (connected[v]) b = b | 1 << idToGroup[v];
+      if (connected[v]) b = b | (1 << idToGroup[v]);
     }
     return b;
   });
 
   for (let ind = 0; ind < columns * rows; ind++) {
-    if(grid[ind])
-    for (let layer of grid[ind]) {
-      if (connected[layer])
-        drawTile(
-          ctx,
-          sprites[layer],
-          ind,
-          columns,
-          geometry,
-          neighborDeltas,
-          (neighbor) => {
-            if (!(bits[neighbor] & (1 << idToGroup[layer]))) return false;
-            if (!(layer in directional)) return true;
-            return (
-              directional[layer][neighbor] == ind ||
-              directional[layer][ind] == neighbor
-            );
-          }
-        );
-      else drawTile(ctx, sprites[layer], ind, columns, geometry);
-    }
+    if (grid[ind])
+      for (let layer of grid[ind]) {
+        if (connected[layer])
+          drawTile(
+            ctx,
+            sprites[layer],
+            ind,
+            layout,
+            columns,
+            neighborDeltas,
+            (neighbor) => {
+              if (!(bits[neighbor] & (1 << idToGroup[layer]))) return false;
+              if (!(layer in directional)) return true;
+              return (
+                directional[layer][neighbor] == ind ||
+                directional[layer][ind] == neighbor
+              );
+            }
+          );
+        else drawTile(ctx, sprites[layer], ind, layout, columns);
+      }
   }
 }

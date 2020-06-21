@@ -94,3 +94,7 @@ const redblobColors = mapToList({
       if(elevation[otherNeighbor] > elevation[erosionPoint])
         elevation[otherNeighbor] -= (elevation[otherNeighbor] - elevation[erosionPoint]) / 5 * (1 - tectonic[erosionPoint]);
     }*/
+
+
+          //console.log(Math.floor((settings.width / 32) * settings.gameMapScale) * 2);
+      //let columns = hexCoords.length / Math.floor((settings.height / 32) * settings.gameMapScale);

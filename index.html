@@ -50,7 +50,6 @@
   #tilesheet {
     display: none;
   }
-
 </style>
 
 <body>
@@ -71,6 +70,7 @@
   <canvas id="hexmap" />
 </body>
 
+<script src="geometry.js"></script>
 <script src="worldgen.js"></script>
 <script src="hexdraw.js"></script>
 
@@ -80,30 +80,103 @@
   let mouseOffset = [0, 0];
 
   const parameters = [
-    ["seed", "number", {tip: "Seed for the random number generator."}],
-    ["width", "number", {tip: "Map width in pixels"}],
-    ["height", "number", {tip: "Map height in pixels"}],
-    ["noiseSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the elevation noise" }],
-    ["tectonicSmoothness", "range", { max: 10, step: 0.5, tip: "Smootheness of the noise that is used for tectonic plates simulation" }],
-    ["noiseFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'general purpose' elevation noise" }],
-    ["crustFactor", "range", { min: -5, max: 20, step: 0.5, tip: "Weight of the 'tectonic plates' noise. Increase to have more mountains on the edge on continents, reduce to have them inside."}],
-    ["tectonicFactor", "range", { min: -1, max: 3, step: 0.1, tip: "Amount of mountains and island chains and such" }],
-    ["pangaea", "range", { min: -5, max: 5, tip: "Increasing this will make land gravitate the centre of the map, and vice versa" }],
-    ["seaRatio", "range", {tip: "Sea percentage"}],
-    ["flatness", "range", {tip: "Initial flatness of the non-mountain areas"}],
+    ["seed", "number", { tip: "Seed for the random number generator." }],
+    ["width", "number", { tip: "Map width in pixels" }],
+    ["height", "number", { tip: "Map height in pixels" }],
+    [
+      "noiseSmoothness",
+      "range",
+      { max: 10, step: 0.5, tip: "Smootheness of the elevation noise" },
+    ],
+    [
+      "tectonicSmoothness",
+      "range",
+      {
+        max: 10,
+        step: 0.5,
+        tip:
+          "Smootheness of the noise that is used for tectonic plates simulation",
+      },
+    ],
+    [
+      "noiseFactor",
+      "range",
+      {
+        min: -5,
+        max: 20,
+        step: 0.5,
+        tip: "Weight of the 'general purpose' elevation noise",
+      },
+    ],
+    [
+      "crustFactor",
+      "range",
+      {
+        min: -5,
+        max: 20,
+        step: 0.5,
+        tip:
+          "Weight of the 'tectonic plates' noise. Increase to have more mountains on the edge on continents, reduce to have them inside.",
+      },
+    ],
+    [
+      "tectonicFactor",
+      "range",
+      {
+        min: -1,
+        max: 3,
+        step: 0.1,
+        tip: "Amount of mountains and island chains and such",
+      },
+    ],
+    [
+      "pangaea",
+      "range",
+      {
+        min: -5,
+        max: 5,
+        tip:
+          "Increasing this will make land gravitate the centre of the map, and vice versa",
+      },
+    ],
+    ["seaRatio", "range", { tip: "Sea percentage" }],
+    [
+      "flatness",
+      "range",
+      { tip: "Initial flatness of the non-mountain areas" },
+    ],
     ["randomiseHumidity", "checkbox"],
     ["averageTemperature", "range", { min: -30, max: 50, step: 1 }],
-    ["erosion", "range", { max: 100000, tip: "How long water-caused erosion will be simulated" }],
-    ["riversShown", "range", { max: 1000, tip: "Amount of rivers and lakes shown on elevation, humidity and biome maps" }],
-    ["biomeScrambling", "range", {tip: "Adds randomness to biomes"}],
-    ["SET hexMapScale TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
-    ["hexMapScale", "range", { min: 0, max: 4, step: 1 }],
-    ["hexMapRivers", "range", { max: 50000, step: 1000, tip: "How many rivers will there be on the low-res (hex) map" }],
+    [
+      "erosion",
+      "range",
+      { max: 100000, tip: "How long water-caused erosion will be simulated" },
+    ],
+    [
+      "riversShown",
+      "range",
+      {
+        max: 1000,
+        tip:
+          "Amount of rivers and lakes shown on elevation, humidity and biome maps",
+      },
+    ],
+    ["biomeScrambling", "range", { tip: "Adds randomness to biomes" }],
+    ["SET gameMapScale TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
+    ["gameMapScale", "range", { min: 0, max: 4, step: 1 }],
+    [
+      "gameMapRivers",
+      "range",
+      {
+        max: 50000,
+        step: 1000,
+        tip: "How many rivers will there be on the low-res (hex) map",
+      },
+    ],
     ["Graphical repesenation settings", "tip"],
+    ["generatePhoto", "checkbox"],
     ["discreteHeights", "range", { max: 40, step: 1 }],
     ["terrainTypeColoring", "checkbox"],
-    ["hillRatio", "range", { max: 0.3 }],
-    ["mountainRatio", "range", { max: 0.3 }],
   ];
 
   let miniMapSize = 200;
@@ -126,13 +199,14 @@
     averageTemperature: 15,
     erosion: 50000,
     riversShown: 400,
-    hexMapRivers: 15000,
     biomeScrambling: 0,
     terrainTypeColoring: false,
     discreteHeights: 0,
     hillRatio: 0.12,
     mountainRatio: 0.04,
-    hexMapScale: 2,
+    gameMapRivers: 15000,
+    gameMapScale: 2,
+    generatePhoto: true
   });
 
   let settings = null;
@@ -272,10 +346,10 @@
       let tooltip = document.getElementById("tooltip");
       tooltip.style.left = Math.min(window.innerWidth - 300, e.screenX + 20);
       tooltip.style.top = Math.min(window.innerHeight - 200, e.screenY - 40);
-      
+
       let isCanvas = e.target.tagName == "CANVAS";
       let id = e.target.id;
-      tooltip.style.display = isCanvas?"grid": tips[id] ? "block" : "none";
+      tooltip.style.display = isCanvas ? "grid" : tips[id] ? "block" : "none";
 
       if (isCanvas) {
         let localX = (e.offsetX / target.width) * settings.width;
@@ -292,7 +366,7 @@
                 }</div>`
           )
           .join("");
-      } else if (tips[id]){
+      } else if (tips[id]) {
         tooltip.innerHTML = tips[id];
       }
     };
@@ -307,6 +381,7 @@
       elevation,
       "elevation",
       elevation2Image({ elevation, rivers }, settings)
+      //(v,i) => v>0?[v * 400, 250 - v*150, (v - elevation[i-12*settings.width])*500, 255]:[0,0,100+v*200,255]
     );
 
     showMap(tectonic, "tectonics", (v, i) => [0, 0, 0, v * 255]);
@@ -334,33 +409,45 @@
       elevation[i] < 0 || rivers[i] ? [0, 40, 80, 255] : contrastColors[v]
     );
 
-    showMap(photo, "photo", (v, i) => v);
+    if(settings.generatePhoto)
+      showMap(photo, "photo", (v, i) => v);
 
-    let hexmapCanvas = document.getElementById("hexmap");
+    console.timeEnd("draw");
 
-    if (settings.hexMapScale) {
-      let hexCoords = rescaleCoordinates(
+
+    console.time("gamemap");
+
+    let layout = AXIAL;
+
+    let gameCanvas = document.getElementById("hexmap");
+
+    if (settings.gameMapScale) {
+      let rescale = rescaleCoordinates(
         settings.height,
         settings.width,
-        32 / settings.hexMapScale,
-        AXIAL
+        32 / settings.gameMapScale,
+        layout
       );
 
-      let columns =
-        Math.floor((settings.width / 32) * settings.hexMapScale) * 2;
+      let hexCoords = rescale.indices;
+      let {columns, row} = rescale;
+      let neighborDeltas = createNeighborDeltas(columns, layout);
 
-      hexmapCanvas.width = settings.width * settings.hexMapScale + 32;
-      hexmapCanvas.height = settings.height * settings.hexMapScale;
+      console.log(rescale);
 
-      hexmapCanvas.style = `display:block;width:${hexmapCanvas.width}px;height:${hexmapCanvas.height}px;`;
+      gameCanvas.width = settings.width * settings.gameMapScale + 32;
+      gameCanvas.height = settings.height * settings.gameMapScale;
+
+      gameCanvas.style = `display:block;width:${gameCanvas.width}px;height:${gameCanvas.height}px;`;
 
       randomSeed = settings.seed;
 
       let { riverDepth, flowsTo } = generatePrettyRivers(
         hexCoords.map((i) => elevation[i]),
         hexCoords.map((i) => Math.max(humidity[i], elevation[i])),
-        settings.hexMapRivers,
-        createNeighborDeltas(columns, AXIAL)
+        settings.gameMapRivers,
+        neighborDeltas,
+        columns
       );
 
       const WATER = 1,
@@ -418,8 +505,6 @@
         tilesheet: document.getElementById("tilesheet"),
       };
 
-      let neighborDeltas = createNeighborDeltas(columns, AXIAL);
-
       /**
        * @typedef Cell
        * @property {number} cover - 0, SNOW or DESERT
@@ -449,21 +534,23 @@
         let water = e < 0;
 
         c.highlands = 0;
-        if (
-          !water &&
-          (tectonic[i] > 0.9 + spread(0.2) || e > 0.5 + spread(0.4))
-        ) {
+        if (!water && tectonic[i] + e > 1.3 + spread(0.8)) {
           if (e > 0.6 + spread(0.2)) c.highlands = MOUNTAIN;
           else c.highlands = HILL;
         }
 
         let river = riverDepth[hexi] > 3;
 
-        if (h > 0.6 + spread(0.4) && !water && c.highlands != MOUNTAIN) {
+        if (
+          h > 0.6 + spread(0.4) &&
+          !water &&
+          !river &&
+          c.highlands != MOUNTAIN
+        ) {
           /*if (!c.cover && !c.highlands && !river && h > 0.8)
             c.vegetation = FOREST;
           else*/
-            c.vegetation = LIGHTFOREST;
+          c.vegetation = LIGHTFOREST;
         }
 
         if (!c.cover && !c.vegetation && h > 0.4) c.cover = GRASS;
@@ -485,7 +572,8 @@
           (c.highlands == MOUNTAIN ? -1000 : 0) +
           (c.highlands == HILL ? -10 : 0) +
           (c.highlands == DESERT ? -10 : 0);
-        for (let delta of neighborDeltas[0]) {
+        let row = Math.floor(i / columns);
+        for (let delta of neighborDeltas[row%2]) {
           let neighbor = hexMap[i + delta];
           quality +=
             (c.river ? 5 : 0) +
@@ -501,16 +589,6 @@
         }
       });
 
-      function distanceBetweenCells(a, b, columns) {
-        let dx = (a % columns) - (b % columns);
-        let dy = Math.floor(a / columns) - Math.floor(b / columns);
-        let dist =
-          dx * dy > 0
-            ? Math.max(Math.abs(dx), Math.max(dy))
-            : Math.abs(dx - dy);
-        return dist;
-      }
-
       console.time("roads");
       for (let start of cities) {
         let end = cities.reduce((a, b) =>
@@ -519,11 +597,11 @@
             ? a
             : b
         );
-        let path = shortestPath(hexMap, start, end, neighborDeltas, (c) =>
+        let path = shortestPath(hexMap, start, end, columns, neighborDeltas, (c) =>
           !c || c.empty
             ? 1000000
             : c.road
-            ? 1
+            ? 5
             : c.water
             ? 500
             : c.river
@@ -536,8 +614,8 @@
         );
         for (let c of path) {
           hexMap[c].road = ROAD;
-          if(hexMap[c].vegetation == FOREST)
-            hexMap[c].vegetation = LIGHTFOREST
+          if (hexMap[c].vegetation == FOREST)
+            hexMap[c].vegetation = LIGHTFOREST;
         }
       }
       console.timeEnd("roads");
@@ -572,9 +650,8 @@
 
         if (c.vegetation == LIGHTFOREST)
           sprites.push(c.highlands && !c.road ? HILLFOREST : LIGHTFOREST);
-        
-        if (c.vegetation == FOREST)
-          sprites.push(FOREST)
+
+        if (c.vegetation == FOREST) sprites.push(FOREST);
 
         /*if (c.vegetation == FOREST)
           sprites.push(FOREST);*/
@@ -585,17 +662,18 @@
       });
 
       drawTerrain(
-        hexmapCanvas.getContext("2d"),
+        gameCanvas.getContext("2d"),
         tiles,
         { [RIVER]: flowsTo },
         columns,
         tileset,
-        AXIAL
+        layout
       );
     } else {
-      hexmapCanvas.style = `display:none;`;
-    }
+      gameCanvas.style = `display:none;`;
+    }    
 
-    console.timeEnd("draw");
+    console.timeEnd("gamemap");
+
   }
 </script>

@@ -149,6 +149,7 @@ function generateMap({
   erosion,
   riversShown,
   randomiseHumidity,
+  generatePhoto
 }) {
   randomSeed = seed;
 
@@ -199,7 +200,7 @@ function generateMap({
 
   elevation = elevation.map((v, i) =>
     v < seaLevel
-      ? -Math.pow(1 - v / seaLevel, 0.4)
+      ? -Math.pow(1 - v / seaLevel, 0.35)
       : Math.pow(
           ((v - seaLevel) * (0.5 + tectonic[i] * 0.5)) / (1 - seaLevel),
           1 + 2 * flatness
@@ -207,6 +208,15 @@ function generateMap({
   );
 
   console.timeEnd("normalize");
+
+  let rivers = generateRiversAndErosion({
+    width,
+    height,
+    elevation,
+    tectonic,
+    erosion,
+    riversShown,
+  });
 
   let wind = elevation.map(
     (h, i) =>
@@ -222,15 +232,6 @@ function generateMap({
     )
   ).map((v) => v * 2 - 1);
   console.timeEnd("windSmoothing");
-
-  let rivers = generateRiversAndErosion({
-    width,
-    height,
-    elevation,
-    tectonic,
-    erosion,
-    riversShown,
-  });
 
   let humidity = generateHumidity({ width, height, elevation, wind });
 
@@ -248,11 +249,10 @@ function generateMap({
       Math.max(0, e) * 30
   );
 
-  humidity = humidity.map((w, i) => w * (1 + Math.atan(-temperature[i] / 100)));
+  //humidity = humidity.map((w, i) => w * (1 + Math.atan(-temperature[i] / 100)));
 
   console.time("biome");
   let biome = temperature.map((t, i) => {
-    let h = elevation[i];
     let b =
       biomeTable[
         Math.floor(
@@ -267,25 +267,27 @@ function generateMap({
           )
         )
       ][Math.floor(Math.max(0, Math.min(t / 10 + 1, 3)))] || 0;
-    if (b == TUNDRA && h > 0.5) b = MOUNTAIN;
+    if (b == TUNDRA && elevation[i] > 0.5) b = MOUNTAIN;
     return b;
   });
   console.timeEnd("biome");
 
-  console.time("photo");
-  let photo = [...humidity].map((w, i) => {
-    if (elevation[i] < 0)
-      return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
-    else {
-      let rgba = [
-        100 - w * 800 + temperature[i] * 10,
-        200 - w * 150,
-        100 - w * 150,
-        255,
-      ];
-      for (let j = 0; j < 3; j++) {
-        if (temperature[i] < 0) rgba[j] = 255;
-        else
+  /**@type {number[][]} */
+  let photo;
+  if (generatePhoto) {
+    console.time("photo");
+    photo = [...humidity].map((w, i) => {
+      if (elevation[i] < 0)
+        return [0, (1 + elevation[i]) * 55, (1 + elevation[i]) * 155, 255];
+      else {
+        let rgba = [
+          temperature[i] * 15 - w * 1000,
+          270 - w * 250,
+          temperature[i] * 8 - w * 700,
+          255,
+        ];
+        for (let j = 0; j < 3; j++) {
+          if (temperature[i] < 0) rgba[j] = 255;
           rgba[j] +=
             50 +
             -elevation[i] * 140 +
@@ -297,11 +299,12 @@ function generateMap({
                   ] || 0) -
                     elevation[i])
               );
+        }
+        return rgba;
       }
-      return rgba;
-    }
-  });
-  console.timeEnd("photo");
+    });
+    console.timeEnd("photo");
+  }
 
   return {
     elevation,
@@ -412,27 +415,27 @@ function generateRiversAndErosion({
       if (streamIndex > erosion) {
         rivers[current] += 1;
       }
-      let currentValue = elevation[current];
+      let currentElevation = elevation[current];
 
       let lowestNeighbor = 0,
-        lowestValue = 100;
+        lowestNeighborElevation = 100;
 
       for (let neighborIndex = 0; neighborIndex < 8; neighborIndex++) {
         let neighborDelta = neighbors[neighborIndex];
-        let value = elevation[current + neighborDelta];
-        if (value <= lowestValue) {
+        if (elevation[current + neighborDelta] <= lowestNeighborElevation) {
           lowestNeighbor = current + neighborDelta;
-          lowestValue = elevation[lowestNeighbor];
+          lowestNeighborElevation = elevation[lowestNeighbor];
         }
       }
 
-      if (lowestValue < currentValue) {
-        elevation[current] -= (currentValue - lowestValue) / 10;
-        if (rivers[lowestNeighbor]) limit -= 10;
-        current = lowestNeighbor;
+      if (lowestNeighborElevation < currentElevation) {
+        elevation[current] -= (currentElevation - lowestNeighborElevation) / 5;
+        //if (rivers[lowestNeighbor]) limit -= 10;
       } else {
-        elevation[current] = lowestValue + 0.02 * (1 - elevation[current]);
+        elevation[current] = lowestNeighborElevation + 0.02;
       }
+
+      current = lowestNeighbor;
     }
   }
 
@@ -546,15 +549,11 @@ function elevation2Image(
     terrainTypeColoring = false,
     hillRatio = 0.1,
     mountainRatio = 0.02,
+    green = true,
   }
 ) {
   let hillElevation = approximateQuantile(elevation, 1 - hillRatio);
   let mountainElevation = approximateQuantile(elevation, 1 - mountainRatio);
-
-  console.log("hill", hillElevation);
-  console.log("mountain", mountainElevation);
-
-  let green = true;
 
   return (v, i) => {
     if (rivers[i] && v > 0) {
@@ -574,46 +573,12 @@ function elevation2Image(
           : [128, 32, 0, 255];
       else
         return green
-          ? [level * 300, level * 200 + 100, 50, 255]
+          ? [level * 400, level * 150 + 100, 50, 255]
           : [250 - level * 300, 200 - level * 300, 0, 255];
     } else {
       return [0, level * 60 + 60, level * 80 + 100, 255];
     }
   };
-}
-
-const SQUARE = 0,
-  ODDR = 1,
-  AXIAL = 2;
-
-/**
- * Returns indices of the elementsthat lie on a different resolution grid
- * @param {number} width
- * @param {number} height
- * @param {number} scale - how lower new resolution is
- * @param {number} geometry - SQUARE/0 for square grid,
- * ODDR/1 returns a hex grid with even rows shifted 0.5 right and rows height being 0.75 of columns width,
- * AXIAL/2 returns a hex grid with row shifted left by 0.5 more with each row
- */
-function rescaleCoordinates(width, height, scale, geometry) {
-  let verticalScale = geometry == 0 ? scale : scale * 0.75;
-  let columns = Math.floor(width / scale) * (geometry == AXIAL ? 2 : 1);
-  let rows = Math.floor(height / verticalScale);
-
-  let result = new Array(rows * columns);
-
-  for (let row = 0; row < rows; row++) {
-    let y = Math.floor((row + 0.5) * verticalScale);
-    let startX = 0;
-    if (geometry == AXIAL) startX = -scale * 0.5 * row;
-    else if (geometry == ODDR) startX = row % 2 == 1 ? scale / 2 : 1;
-    for (let column = 0; column < columns; column++) {
-      let x = Math.floor(startX + column * scale);
-      if (x >= 0 && x <= width) result[row * columns + column] = y * width + x;
-    }
-  }
-  console.log(rows, columns);
-  return result;
 }
 
 /**
@@ -644,65 +609,12 @@ function subImage(image, left, top, width, height) {
 }
 
 /**
- * Returns the list of relative indices of neighbors for even and odd lines in clockwork order.
- * @param {*} columns
- * @param {*} geometry - one of SQUARE, ODDR or AXIAL
- */
-
-function createNeighborDeltas(columns, geometry) {
-  let r;
-  switch (geometry) {
-    case SQUARE:
-      r = [
-        [0, -1],
-        [1, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 1],
-        [-1, 0],
-        [-1, -1],
-      ].map(([dx, dy]) => dy * columns + dx);
-      return [r, r];
-    case ODDR:
-      return [
-        [
-          [0, -1],
-          [1, 0],
-          [0, 1],
-          [-1, 1],
-          [-1, 0],
-          [-1, -1],
-        ],
-        [
-          [1, -1],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [-1, 0],
-          [0, -1],
-        ],
-      ].map((n) => n.map(([dx, dy]) => dy * columns + dx));
-    case AXIAL:
-      r = [
-        [0, -1],
-        [1, 0],
-        [1, 1],
-        [0, 1],
-        [-1, 0],
-        [-1, -1],
-      ].map(([dx, dy]) => dy * columns + dx);
-      return [r, r];
-  }
-}
-
-/**
  * Returns a matrix of rivers sizes and directions per cell
  * @param {number[]} heights
  * @param {number[]} neighborDeltas
  * @returns {number[]}
  */
-function generatePrettyRivers(heights, probability, attempts, neighborDeltas) {
+function generatePrettyRivers(heights, probability, attempts, neighborDeltas, columns) {
   let hlen = heights.length;
   let courseAt = 0;
   let course = new Int32Array(100);
@@ -711,9 +623,10 @@ function generatePrettyRivers(heights, probability, attempts, neighborDeltas) {
   for (let riveri = 0; riveri < attempts; riveri++) {
     let at = Math.floor(random() * hlen);
     if (heights[at] <= 0 || probability[at] < random()) continue;
-    courseAt = 0;
+    courseAt = 0;    
     while (heights[at] > 0 && courseAt < 100) {
-      let lowestNeighborDelta = neighborDeltas[0].reduce((a, b) =>
+      let row = Math.floor(at / columns);
+      let lowestNeighborDelta = neighborDeltas[row%2].reduce((a, b) =>
         heights[at + a] - riverDepth[at + a] <
         heights[at + b] - riverDepth[at + b]
           ? a
@@ -731,35 +644,4 @@ function generatePrettyRivers(heights, probability, attempts, neighborDeltas) {
     }
   }
   return { riverDepth, flowsTo };
-}
-
-function shortestPath(world, start, end, neighborDeltas, cellCost) {
-  let bag = [start];
-  let wayCost = [];
-  wayCost[start] = 0.01;
-  let prev = [];
-  for (let i = 0; i < 10000; i++) {
-    if (bag.length == 0) return [];
-    let walking = bag.shift();
-    if (walking == end) {
-      let r = [];
-      while (walking) {
-        r.push(walking);
-        walking = prev[walking];
-      }
-      return r;
-    }
-    for (let delta of neighborDeltas[0]) {
-      let cell = walking + delta;
-      let cost = cellCost(world[cell]);
-      let totalCost = cost + wayCost[walking];
-      if (!wayCost[cell] || wayCost[cell] > totalCost) {
-        let bigger = bag.findIndex((v) => wayCost[v] > totalCost);
-        bag.splice(bigger >= 0 ? bigger - 1 : bag.length, 0, cell);
-        wayCost[cell] = totalCost;
-        prev[cell] = walking;
-      }
-    }
-  }
-  return [];
 }
