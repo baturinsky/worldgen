@@ -61,13 +61,9 @@ function createNeighborDeltas(columns, geometry) {
     case SQUARE:
       r = [
         [0, -1],
-        [1, -1],
         [1, 0],
-        [1, 1],
         [0, 1],
-        [-1, 1],
         [-1, 0],
-        [-1, -1],
       ].map(([dx, dy]) => dy * columns + dx);
       return [r, r];
     case ODDR:
@@ -112,13 +108,13 @@ function createNeighborDeltas(columns, geometry) {
   }
 }
 
-function ind2xy(xy, columns) {
-  let x = xy % columns;
-  let y = (xy - x) / columns;
+function ind2xy(ind, columns) {
+  let x = ind % columns;
+  let y = (ind - x) / columns;
   return [x, y];
 }
 
-function screenPos(ind, columns, hexWidth, layout, hexHeight = 0) {
+function screenPos(ind, columns, layout, tileWidth, tileHeight = 0) {
   let [x, y] = ind2xy(ind, columns);
   return [
     (x +
@@ -129,18 +125,29 @@ function screenPos(ind, columns, hexWidth, layout, hexHeight = 0) {
         : layout == WIDTH2
         ? -x / 2
         : 0)) *
-      hexWidth,
-    y * (hexHeight || hexWidth * 0.75),
+      tileWidth,
+    y * (tileHeight || tileWidth * (layout==SQUARE?1:0.75)),
   ];
 }
 
-function distanceBetweenCells(a, b, columns, layout) {
+function distanceBetweenCells(a, b, columns, layout=AXIAL) {
   let dx = (b % columns) - (a % columns);
   let dy = Math.floor(b / columns) - Math.floor(a / columns);
-  let dist =
-    dx * dy > 0
+  let dist = 0;
+  switch(layout){
+    case SQUARE:
+      dist = Math.abs(dx) + Math.abs(dy)
+      break;
+    case AXIAL:
+      dist = dx * dy > 0
       ? Math.max(Math.abs(dx), Math.max(dy))
       : Math.abs(dx - dy);  
+      break;
+    default:
+      log.error("not implemented");
+      debugger;
+      break;
+  }
   return dist;
 }
 

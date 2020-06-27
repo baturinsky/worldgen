@@ -47,13 +47,14 @@
     text-align: right;
   }
 
-  #tilesheet {
+  .tilesheet {
     display: none;
   }
 </style>
 
 <body>
-  <img id="tilesheet" src="tilesets/hexSheet2.png" />
+  <img class="tilesheet" id="hexSheet" src="tilesets/hexSheet.png" />
+  <img class="tilesheet" id="squareSheet" src="tilesets/squareSheet.png" />
   <div id="tooltip">tooltip</div>
   Worldgen by <a href="https://twitter.com/baturinsky">@baturinsky</a> -
   <a href="https://github.com/baturinsky/worldgen">source at github</a>
@@ -67,7 +68,7 @@
       <div id="minimaps"></div>
     </div>
   </div>
-  <canvas id="hexmap" />
+  <canvas id="gameMap" />
 </body>
 
 <script src="geometry.js"></script>
@@ -162,7 +163,8 @@
       },
     ],
     ["biomeScrambling", "range", { tip: "Adds randomness to biomes" }],
-    ["SET gameMapScale TO NOT 0 IF YOU WANT A HEX MAP", "tip"],
+    ["SET gameMapScale TO NOT 0 IF YOU WANT A GAME MAP", "tip"],
+    ["squareGrid", "checkbox"],
     ["gameMapScale", "range", { min: 0, max: 4, step: 1 }],
     [
       "gameMapRivers",
@@ -206,7 +208,8 @@
     mountainRatio: 0.04,
     gameMapRivers: 15000,
     gameMapScale: 2,
-    generatePhoto: true
+    generatePhoto: true,
+    squareGrid: false
   });
 
   let settings = null;
@@ -409,17 +412,15 @@
       elevation[i] < 0 || rivers[i] ? [0, 40, 80, 255] : contrastColors[v]
     );
 
-    if(settings.generatePhoto)
-      showMap(photo, "photo", (v, i) => v);
+    if (settings.generatePhoto) showMap(photo, "photo", (v, i) => v);
 
     console.timeEnd("draw");
 
-
     console.time("gamemap");
 
-    let layout = AXIAL;
+    let layout = settings.squareGrid?SQUARE:AXIAL;
 
-    let gameCanvas = document.getElementById("hexmap");
+    let gameCanvas = document.getElementById("gameMap");
 
     if (settings.gameMapScale) {
       let rescale = rescaleCoordinates(
@@ -430,7 +431,7 @@
       );
 
       let hexCoords = rescale.indices;
-      let {columns, row} = rescale;
+      let { columns, row } = rescale;
       let neighborDeltas = createNeighborDeltas(columns, layout);
 
       console.log(rescale);
@@ -471,7 +472,8 @@
         SNOWHILL = 37,
         DESERTHILL = 38,
         HILLFOREST = 39;
-      let tileset = {
+
+      let tilesetHex = {
         tilesSize: 32,
         connected: [
           [WATER, 0, 0],
@@ -502,7 +504,43 @@
           [RIVER, RIVERDELTA],
           [ROAD, BRIDGE, HILLROAD],
         ],
-        tilesheet: document.getElementById("tilesheet"),
+        tilesheet: document.getElementById("hexSheet"),
+      };
+
+      let tilesetSquare = {
+        tilesSize: 32,
+        connected: [
+          [WATER, 0, 7],
+          [ROAD, 6, 7],
+          [BRIDGE, 6, 7],
+          [DESERT, 8, 0],
+          [RIVERDELTA, 8, 3],
+          [RIVER, 8, 6],
+          [SNOW, 2, 7],
+          [GRASS, 4, 7],          
+          /*,
+          [DIRT, 2, 0],
+          [HILLROAD, 6, 0],
+*/
+        ],
+        single: [
+          [HILL, 3, 0],
+          [DIRTHILL, 3, 1],
+          [SNOWHILL, 3, 2],
+          [DESERTHILL, 3, 3],
+          [CITY, 5, 6],
+          [MOUNTAIN, 4, 4],
+          [FOREST, 3, 3],
+          [LIGHTFOREST, 4, 6],
+          [HILLFOREST, 4, 7],
+          [STEPPE, 7, 1],
+          [GRASS1, 4, 3],
+        ],
+        grouped: [
+          [RIVER, RIVERDELTA],
+          [ROAD, BRIDGE, HILLROAD],
+        ],
+        tilesheet: document.getElementById("squareSheet"),
       };
 
       /**
@@ -517,7 +555,7 @@
        */
 
       /** @type {Cell[]} */
-      let hexMap = hexCoords.map((i, hexi) => {
+      let gameMap = hexCoords.map((i, hexi) => {
         /** @type {Cell} */
         let c = {};
 
@@ -547,9 +585,6 @@
           !river &&
           c.highlands != MOUNTAIN
         ) {
-          /*if (!c.cover && !c.highlands && !river && h > 0.8)
-            c.vegetation = FOREST;
-          else*/
           c.vegetation = LIGHTFOREST;
         }
 
@@ -563,7 +598,7 @@
       });
 
       let cities = [];
-      hexMap.forEach((c, i) => {
+      gameMap.forEach((c, i) => {
         let quality =
           10 +
           (c.empty ? -10000 : 0) +
@@ -573,15 +608,18 @@
           (c.highlands == HILL ? -10 : 0) +
           (c.highlands == DESERT ? -10 : 0);
         let row = Math.floor(i / columns);
-        for (let delta of neighborDeltas[row%2]) {
-          let neighbor = hexMap[i + delta];
+        for (let delta of neighborDeltas[row % 2]) {
+          let neighbor = gameMap[i + delta];
           quality +=
-            (c.river ? 5 : 0) +
-            (c.water ? 5 : 0) +
-            (c.water == RIVERDELTA ? 20 : 0) +
-            (c.cover == 0 ? 3 : 0);
+            (c.river ? 10 : 0) +
+            (c.water ? 50 : 0) +
+            (c.water == RIVERDELTA ? 50 : 0) +
+            (c.cover == 0 ? 10 : 0);
         }
-        if (quality / 1000 > random()) {
+        if (quality / 400 > random()) {
+          for (let other of cities) {
+            if (distanceBetweenCells(other, i, columns, layout) < 5) return;
+          }
           c.building = CITY;
           c.road = ROAD;
           c.vegetation = 0;
@@ -591,36 +629,37 @@
 
       console.time("roads");
       for (let start of cities) {
-        let end = cities.reduce((a, b) =>
-          distanceBetweenCells(a, start, columns) <
-            distanceBetweenCells(b, start, columns) && a != start
-            ? a
-            : b
-        );
-        let path = shortestPath(hexMap, start, end, columns, neighborDeltas, (c) =>
-          !c || c.empty
-            ? 1000000
-            : c.road
-            ? 5
-            : c.water
-            ? 500
-            : c.river
-            ? 200
-            : c.highlands == MOUNTAIN
-            ? 2000
-            : c.highlands
-            ? 100
-            : 30
+        let end = cities[Math.floor(random() * cities.length)];
+        let path = shortestPath(
+          gameMap,
+          start,
+          end,
+          columns,
+          neighborDeltas,
+          (c) =>
+            !c || c.empty
+              ? 1000000
+              : c.road
+              ? 5
+              : c.water
+              ? 500
+              : c.river
+              ? 100
+              : c.highlands == MOUNTAIN
+              ? 2000
+              : c.highlands
+              ? 100
+              : 30
         );
         for (let c of path) {
-          hexMap[c].road = ROAD;
-          if (hexMap[c].vegetation == FOREST)
-            hexMap[c].vegetation = LIGHTFOREST;
+          gameMap[c].road = ROAD;
+          if (gameMap[c].vegetation == FOREST)
+            gameMap[c].vegetation = LIGHTFOREST;
         }
       }
       console.timeEnd("roads");
 
-      let tiles = hexMap.map((c) => {
+      let tiles = gameMap.map((c) => {
         let sprites = [GRASS1];
 
         if (c.cover) sprites.push(c.cover);
@@ -653,8 +692,7 @@
 
         if (c.vegetation == FOREST) sprites.push(FOREST);
 
-        /*if (c.vegetation == FOREST)
-          sprites.push(FOREST);*/
+        if (c.vegetation == FOREST) sprites.push(FOREST);
 
         if (c.building) sprites.push(c.building);
 
@@ -666,14 +704,13 @@
         tiles,
         { [RIVER]: flowsTo },
         columns,
-        tileset,
+        layout == SQUARE ? tilesetSquare : tilesetHex,
         layout
       );
     } else {
       gameCanvas.style = `display:none;`;
-    }    
+    }
 
     console.timeEnd("gamemap");
-
   }
 </script>

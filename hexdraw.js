@@ -22,9 +22,13 @@ function createCanvasCtx(width, height) {
 
 /**
  * Creates a sectored masks for cutting up hexes (or squares)
+ * @param {number} size - tile size in pixels
+ * @param {number} layout
  */
-function createMask(size = 32, sectorsNumber=12) {
-  let canvases = [...Array(sectorsNumber+1)].map(() => {
+function createMask(size = 32, layout) {
+  let sectorsNumber = layout == SQUARE ? 8 : 12;
+
+  let canvases = [...Array(sectorsNumber + 1)].map(() => {
     let { canvas, ctx } = createCanvasCtx(size, size);
     let data = ctx.createImageData(size, size);
     return { canvas, data };
@@ -34,9 +38,12 @@ function createMask(size = 32, sectorsNumber=12) {
     for (let y = 0; y < size; y++) {
       let point = (y * size + x) * 4;
       let angle = Math.atan2(size / 2 - 0.5 - x, y - (size / 2 - 0.5));
-      let sector = Math.floor((angle / Math.PI + 1) * 6);
+      let sector =
+        sectorsNumber == 12
+          ? Math.floor((angle / Math.PI + 1) * 6)
+          : (Math.floor((angle / Math.PI + 1) * 4) + 1) % 8;
       canvases[sector].data.data.set([255, 255, 255, 255], point);
-      canvases[12].data.data.set(
+      canvases[sectorsNumber].data.data.set(
         [
           (sector / 12) * 255,
           255 - (sector / 12) * 255,
@@ -52,13 +59,13 @@ function createMask(size = 32, sectorsNumber=12) {
   return canvases.map((c) => c.canvas);
 }
 
-function cutImageUp(image, left, top, masks) {
+function cutImageToSectors(image, left, top, masks) {
   let imagePieces = [];
   let size = masks[0].width;
   let r = size / 2;
 
   for (let part = 0; part < 3; part++) {
-    for (let sector = 0; sector < masks.length-1; sector++) {
+    for (let sector = 0; sector < masks.length - 1; sector++) {
       let { canvas, ctx } = createCanvasCtx(r * 2, r * 2);
 
       ctx.drawImage(masks[sector], 0, 0);
@@ -85,43 +92,139 @@ function cutImageUp(image, left, top, masks) {
   return imagePieces;
 }
 
+/**
+ *
+ * @param {*} image
+ * @param {*} columns
+ * @param {*} rows
+ * @param {*} fragmentWidth
+ * @param {*} fragmentHeight
+ * @param {*} left
+ * @param {*} top
+ */
+function cutImageUp(
+  image,
+  columns,
+  rows,
+  fragmentWidth,
+  fragmentHeight,
+  left = 0,
+  top = 0
+) {
+  let imagePieces = [];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      let { canvas, ctx } = createCanvasCtx(fragmentWidth, fragmentHeight);
+      ctx.drawImage(
+        image,
+        left + x * fragmentWidth,
+        top + y * fragmentHeight,
+        fragmentWidth,
+        fragmentHeight,
+        0,
+        0,
+        fragmentWidth,
+        fragmentHeight
+      );
+      imagePieces.push(canvas);
+    }
+  }
+  return imagePieces;
+}
+
+const partsOrder = "334433443223100110013223"
+  .split("")
+  .map((s, i) => Number(s) * 4 + (i % 2) + (Math.floor(i / 4) % 2) * 2);
+
+function cutImagetoSquares(img, left, top) {
+  let partsUnordered = cutImageUp(img, 4, 6, 16, 16, left, top);
+  let tile = [];
+  partsOrder.forEach((v, i) => (tile[v] = partsUnordered[i]));
+  return tile;
+}
+
+function drawSquareTile(ctx, tile, ind, columns, connect) {  
+  let [tileX, tileY] = screenPos(ind, columns, SQUARE, tile[0].width*2);
+  for (let corner = 0; corner < 4; corner++) {
+    let dx = corner % 2 ? 1 : -1;
+    let dy = corner > 1 ? 1 : -1;
+    let xNear = !connect(ind + dx, ind);
+    let yNear = !connect(ind + dy * columns, ind);
+    let kind = 0;
+    if (xNear || yNear) {
+      kind = xNear + yNear * 2;
+    } else if (!connect(ind + dy * columns + dx, ind)) {
+      kind = 4;
+    }
+    ctx.drawImage(
+      tile[kind * 4 + corner],
+      tileX + (corner % 2 ? 16 : 0),
+      tileY + (corner > 1 ? 16 : 0)
+    );
+  }
+}
+
 function drawTile(ctx, tile, ind, layout, columns, neighborDeltas, connect) {
+  if (!tile) return;
+
   if (!neighborDeltas) {
-    let [tileX, tileY] = screenPos(ind, columns, tile.width, layout);
+    let [tileX, tileY] = screenPos(ind, columns, layout, tile.width);
     ctx.drawImage(tile, tileX, tileY);
     return;
   }
-  let [tileX, tileY] = screenPos(ind, columns, tile[0].width, layout);
+
+  if (layout == SQUARE) return drawSquareTile(ctx, tile, ind, columns, connect);
+
+  let [tileX, tileY] = screenPos(ind, columns, layout, tile[0].width);
   let row = Math.floor(ind / columns);
   let deltas = neighborDeltas[row % 2];
-  for (let subi = 0; subi < 12; subi++) {
+  let sectorsNumber = layout == SQUARE ? 8 : 12;
+
+  for (let subi = 0; subi < sectorsNumber; subi++) {
     let imagei = subi;
     let side = Math.floor(subi / 2);
-    let neighbor2Side = (side + (subi % 2 ? 1 : 5)) % 6;
+    let neighbor2Side =
+      (side + (subi % 2 ? 1 : sectorsNumber / 2 - 1)) % (sectorsNumber / 2);
     let neighbor1 = connect(ind + deltas[side], ind);
     let neighbor2 = connect(ind + deltas[neighbor2Side], ind);
     let mode = neighbor1 ? 2 : neighbor2 ? 1 : 0;
-    imagei += mode * 12;
+    imagei += mode * sectorsNumber;
     ctx.drawImage(tile[imagei], tileX, tileY);
   }
 }
 
+/**
+ * 
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {number[][]} grid - lists of sprite indices
+ * @param {{[key:number]:number[]}} directional - for directional tiles (such as RIVER for hex map) - list of cell it flows to
+ * @param {number} columns - number of columns
+ * @param {Tileset} tileset 
+ * @param {number} layout 
+ */
 function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
   let neighborDeltas = createNeighborDeltas(columns, layout);
   let tileSize = tileset.tilesSize;
   let rows = grid.length / columns;
 
-  let masks = createMask(tileSize);
+  let masks = createMask(tileSize, layout);
 
   let sprites = [];
   let connected = [];
   for (let layer of tileset.connected) {
-    let slices = cutImageUp(
-      tileset.tilesheet,
-      layer[1] * tileSize,
-      layer[2] * tileSize,
-      masks
-    );
+    let slices =
+      layout == SQUARE
+        ? cutImagetoSquares(
+            tileset.tilesheet,
+            layer[1] * tileSize,
+            layer[2] * tileSize
+          )
+        : cutImageToSectors(
+            tileset.tilesheet,
+            layer[1] * tileSize,
+            layer[2] * tileSize,
+            masks
+          );
     sprites[layer[0]] = slices;
     connected[layer[0]] = true;
   }
@@ -155,7 +258,7 @@ function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
   for (let ind = 0; ind < columns * rows; ind++) {
     if (grid[ind])
       for (let layer of grid[ind]) {
-        if (connected[layer])
+        if (connected[layer]) {
           drawTile(
             ctx,
             sprites[layer],
@@ -172,7 +275,9 @@ function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
               );
             }
           );
-        else drawTile(ctx, sprites[layer], ind, layout, columns);
+        } else {
+          drawTile(ctx, sprites[layer], ind, layout, columns);
+        }
       }
   }
 }

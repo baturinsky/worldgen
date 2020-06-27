@@ -98,3 +98,11 @@ const redblobColors = mapToList({
 
           //console.log(Math.floor((settings.width / 32) * settings.gameMapScale) * 2);
       //let columns = hexCoords.length / Math.floor((settings.height / 32) * settings.gameMapScale);
+
+
+        /*let end = cities.reduce((a, b) =>
+          distanceBetweenCells(a, start, columns, layout) <
+            distanceBetweenCells(b, start, columns, layout) && a != start
+            ? a
+            : b
+        );*/      
