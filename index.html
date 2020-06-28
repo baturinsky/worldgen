@@ -209,7 +209,7 @@
     gameMapRivers: 15000,
     gameMapScale: 2,
     generatePhoto: true,
-    squareGrid: false
+    squareGrid: false,
   });
 
   let settings = null;
@@ -217,12 +217,16 @@
   function init() {
     if (document.location.hash) {
       settings = {};
-      for (let ss of document.location.hash
+      let records = document.location.hash
         .substr(1)
         .split("&")
-        .map((s) => s.split("="))) {
-        settings[ss[0]] = ss[1] == "false" ? false : Number(ss[1]);
+        .map((s) => s.split("="));
+      console.log(records);
+      for (let ss of records) {
+        settings[ss[0]] =
+          ss[1] == "false" ? false : ss[1] == "true" ? true : Number(ss[1]);
       }
+      console.log(settings);
     }
 
     if (!settings || settings.width == 0)
@@ -418,7 +422,7 @@
 
     console.time("gamemap");
 
-    let layout = settings.squareGrid?SQUARE:AXIAL;
+    let layout = settings.squareGrid ? SQUARE : AXIAL;
 
     let gameCanvas = document.getElementById("gameMap");
 
@@ -511,17 +515,13 @@
         tilesSize: 32,
         connected: [
           [WATER, 0, 7],
-          [ROAD, 6, 7],
-          [BRIDGE, 6, 7],
+          [ROAD, 0, 3, ISPATH],
+          [BRIDGE, 0, 3, ISPATH],
           [DESERT, 8, 0],
           [RIVERDELTA, 8, 3],
           [RIVER, 8, 6],
           [SNOW, 2, 7],
-          [GRASS, 4, 7],          
-          /*,
-          [DIRT, 2, 0],
-          [HILLROAD, 6, 0],
-*/
+          [GRASS, 4, 7],
         ],
         single: [
           [HILL, 3, 0],
@@ -628,6 +628,7 @@
       });
 
       console.time("roads");
+      let pathfindingDeltas = layout == SQUARE?createNeighborDeltas(columns, SQUARE8):neighborDeltas;
       for (let start of cities) {
         let end = cities[Math.floor(random() * cities.length)];
         let path = shortestPath(
@@ -635,7 +636,7 @@
           start,
           end,
           columns,
-          neighborDeltas,
+          pathfindingDeltas,
           (c) =>
             !c || c.empty
               ? 1000000

@@ -397,7 +397,7 @@ function generateRiversAndErosion({
 
   let rivers = new Float32Array(width * height);
 
-  let neighbors = createNeighborDeltas(width, SQUARE)[0];
+  let neighbors = createNeighborDeltas(width, SQUARE8)[0];
 
   for (
     let streamIndex = 0;

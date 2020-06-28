@@ -1,7 +1,8 @@
 const SQUARE = 0,
   ODDR = 1,
   WIDTH2 = 2,
-  AXIAL = 3;
+  AXIAL = 3,
+  SQUARE8 = 4;
 
 /**
  * Returns indices of the elementsthat lie on a different resolution grid
@@ -66,6 +67,18 @@ function createNeighborDeltas(columns, geometry) {
         [-1, 0],
       ].map(([dx, dy]) => dy * columns + dx);
       return [r, r];
+    case SQUARE8:
+      r = [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [-1, 1],
+        [-1, 0],
+        [-1, -1]
+      ].map(([dx, dy]) => dy * columns + dx);
+      return [r,r]
     case ODDR:
       return [
         [

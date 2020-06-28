@@ -132,6 +132,15 @@ function cutImageUp(
   return imagePieces;
 }
 
+/**
+ * For each tile quater, in order of left to right and up to down,
+ * number represents in which case it should be drawn, depending on same tile neighbors
+ * 0 - no neighbors
+ * 1 - neighbor horizontally
+ * 2 - vertically
+ * 3 - horizontally and vertically
+ * 4 - nor horizontally or vertically, but diagonally
+ */
 const partsOrder = "334433443223100110013223"
   .split("")
   .map((s, i) => Number(s) * 4 + (i % 2) + (Math.floor(i / 4) % 2) * 2);
@@ -143,17 +152,54 @@ function cutImagetoSquares(img, left, top) {
   return tile;
 }
 
-function drawSquareTile(ctx, tile, ind, columns, connect) {  
-  let [tileX, tileY] = screenPos(ind, columns, SQUARE, tile[0].width*2);
+const pathNeighbors = [
+  [-1, 0],
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+];
+
+const pathDisplacement = -0.1
+
+/**
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Tileset} tile - tileset
+ * @param {number} pos - position of the tile
+ * @param {number} columns - number of columns
+ * @param {(pos:number) => boolean} connect
+ */
+function drawPath(ctx, tile, pos, columns, connect) {
+  let tileWidth = tile[0].width;
+  let [tileX, tileY] = screenPos(pos, columns, SQUARE, tileWidth);
+  let pixelPathDisplacement = Math.floor(tileWidth * pathDisplacement)
+  ctx.drawImage(tile[1], tileX + pixelPathDisplacement, tileY + pixelPathDisplacement);
+  for (let i = 0; i < 4; i++) {
+    let connected = connect(
+      pos + pathNeighbors[i][0] + pathNeighbors[i][1] * columns
+    );
+    if (connected)
+      ctx.drawImage(
+        tile[2 + i],
+        tileX + tileWidth * (pathNeighbors[i][0] / 2) + pixelPathDisplacement,
+        tileY + tileWidth * (pathNeighbors[i][1] / 2) + pixelPathDisplacement
+      );
+  }
+}
+
+function drawSquareTile(ctx, tile, pos, columns, connect) {
+  if (tile.length == 6) return drawPath(ctx, tile, pos, columns, connect);
+
+  let [tileX, tileY] = screenPos(pos, columns, SQUARE, tile[0].width * 2);
   for (let corner = 0; corner < 4; corner++) {
     let dx = corner % 2 ? 1 : -1;
     let dy = corner > 1 ? 1 : -1;
-    let xNear = !connect(ind + dx, ind);
-    let yNear = !connect(ind + dy * columns, ind);
+    let xNear = !connect(pos + dx);
+    let yNear = !connect(pos + dy * columns);
     let kind = 0;
     if (xNear || yNear) {
       kind = xNear + yNear * 2;
-    } else if (!connect(ind + dy * columns + dx, ind)) {
+    } else if (!connect(pos + dy * columns + dx)) {
       kind = 4;
     }
     ctx.drawImage(
@@ -164,19 +210,29 @@ function drawSquareTile(ctx, tile, ind, columns, connect) {
   }
 }
 
-function drawTile(ctx, tile, ind, layout, columns, neighborDeltas, connect) {
+/**
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {*} tile
+ * @param {number} pos
+ * @param {number} layout
+ * @param {number} columns
+ * @param {number[][]} neighborDeltas
+ * @param {(pos:number) => boolean} connect
+ */
+function drawTile(ctx, tile, pos, layout, columns, neighborDeltas, connect) {
   if (!tile) return;
 
   if (!neighborDeltas) {
-    let [tileX, tileY] = screenPos(ind, columns, layout, tile.width);
+    let [tileX, tileY] = screenPos(pos, columns, layout, tile.width);
     ctx.drawImage(tile, tileX, tileY);
     return;
   }
 
-  if (layout == SQUARE) return drawSquareTile(ctx, tile, ind, columns, connect);
+  if (layout == SQUARE) return drawSquareTile(ctx, tile, pos, columns, connect);
 
-  let [tileX, tileY] = screenPos(ind, columns, layout, tile[0].width);
-  let row = Math.floor(ind / columns);
+  let [tileX, tileY] = screenPos(pos, columns, layout, tile[0].width);
+  let row = Math.floor(pos / columns);
   let deltas = neighborDeltas[row % 2];
   let sectorsNumber = layout == SQUARE ? 8 : 12;
 
@@ -185,40 +241,41 @@ function drawTile(ctx, tile, ind, layout, columns, neighborDeltas, connect) {
     let side = Math.floor(subi / 2);
     let neighbor2Side =
       (side + (subi % 2 ? 1 : sectorsNumber / 2 - 1)) % (sectorsNumber / 2);
-    let neighbor1 = connect(ind + deltas[side], ind);
-    let neighbor2 = connect(ind + deltas[neighbor2Side], ind);
+    let neighbor1 = connect(pos + deltas[side]);
+    let neighbor2 = connect(pos + deltas[neighbor2Side]);
     let mode = neighbor1 ? 2 : neighbor2 ? 1 : 0;
     imagei += mode * sectorsNumber;
     ctx.drawImage(tile[imagei], tileX, tileY);
   }
 }
 
-/**
- * 
- * @param {CanvasRenderingContext2D} ctx 
- * @param {number[][]} grid - lists of sprite indices
- * @param {{[key:number]:number[]}} directional - for directional tiles (such as RIVER for hex map) - list of cell it flows to
- * @param {number} columns - number of columns
- * @param {Tileset} tileset 
- * @param {number} layout 
- */
-function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
-  let neighborDeltas = createNeighborDeltas(columns, layout);
+const ISPATH = 1;
+
+function createSprites(tileset, layout) {
   let tileSize = tileset.tilesSize;
-  let rows = grid.length / columns;
 
   let masks = createMask(tileSize, layout);
 
   let sprites = [];
-  let connected = [];
   for (let layer of tileset.connected) {
+    let ispath = layer[3] & ISPATH ? true : false;
     let slices =
       layout == SQUARE
-        ? cutImagetoSquares(
-            tileset.tilesheet,
-            layer[1] * tileSize,
-            layer[2] * tileSize
-          )
+        ? ispath
+          ? cutImageUp(
+              tileset.tilesheet,
+              2,
+              3,
+              32,
+              32,
+              layer[1] * tileSize,
+              layer[2] * tileSize
+            )
+          : cutImagetoSquares(
+              tileset.tilesheet,
+              layer[1] * tileSize,
+              layer[2] * tileSize
+            )
         : cutImageToSectors(
             tileset.tilesheet,
             layer[1] * tileSize,
@@ -226,7 +283,6 @@ function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
             masks
           );
     sprites[layer[0]] = slices;
-    connected[layer[0]] = true;
   }
   for (let tile of tileset.single) {
     let image = subImage(
@@ -238,22 +294,48 @@ function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
     );
     sprites[tile[0]] = image;
   }
+  return sprites;
+}
 
-  let idToGroup = sprites.map((v, i) => i);
+/**
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number[][]} grid - lists of sprite indices
+ * @param {{[key:number]:number[]}} directional - for directional tiles (such as RIVER for hex map) - list of cell it flows to
+ * @param {number} columns - number of columns
+ * @param {Tileset} tileset
+ * @param {number} layout
+ */
+function drawTerrain(ctx, grid, directional, columns, tileset, layout) {
+  let neighborDeltas = createNeighborDeltas(columns, layout);
+  let rows = grid.length / columns;
 
+  let sprites = createSprites(tileset, layout);
+
+  let connected = [];
+  for (let layer of tileset.connected) connected[layer[0]] = true;
+
+  let idToGroup = sprites.map((_, i) => i);
   if (tileset.grouped)
     for (let grouped of tileset.grouped) {
       let group = grouped[0];
       for (let id of grouped) idToGroup[id] = group;
     }
 
-  let bits = grid.map((list) => {
+  /**
+   * Bitmap of connectable sprite ids
+   * So, don't have their ids bigger than 32
+   */
+
+  let bits = new Uint32Array(grid.length);
+  for (let i in grid) {
+    let list = grid[i];
     let b = 0;
     for (let v of list) {
       if (connected[v]) b = b | (1 << idToGroup[v]);
     }
-    return b;
-  });
+    bits[i] = b;
+  }
 
   for (let ind = 0; ind < columns * rows; ind++) {
     if (grid[ind])
